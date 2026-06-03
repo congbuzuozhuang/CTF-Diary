@@ -1,0 +1,53 @@
+{
+  "permissions": {
+    "allow": [
+      "Write",
+      "Edit",
+      "Bash(rm *)",
+      "Bash(del *)",
+      "Bash(rmdir *)",
+      "Bash(make *)",
+      "Bash(gcc *)",
+      "Bash(g++ *)",
+      "Bash(go build *)",
+      "Bash(go run *)",
+      "Bash(go test *)",
+      "Bash(go mod *)",
+      "Bash(cargo build *)",
+      "Bash(cargo run *)",
+      "Bash(cargo test *)",
+      "Bash(cargo check *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(npm test *)",
+      "Bash(npx *)",
+      "Bash(node *)",
+      "Bash(python *)",
+      "Bash(pip install *)",
+      "Bash(pip uninstall *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Bash(cat *)",
+      "Bash(echo *)",
+      "Bash(ls *)",
+      "Bash(choco install *)",
+      "Bash(choco uninstall *)"
+    ]
+  },
+  "enabledPlugins": {
+    "bash-development@jamie-bitflight-skills": true,
+    "python3-development@jamie-bitflight-skills": true,
+    "dh@jamie-bitflight-skills": true,
+    "holistic-linting@jamie-bitflight-skills": true,
+    "verification-gate@jamie-bitflight-skills": true,
+    "scientific-method@jamie-bitflight-skills": true,
+    "conventional-commits@jamie-bitflight-skills": true,
+    "commitlint@jamie-bitflight-skills": true,
+    "summarizer@jamie-bitflight-skills": true,
+    "designing-tests@skill-workshop": true,
+    "superpowers-architect@skill-workshop": true,
+    "superpowers-memory@skill-workshop": true,
+    "sdd@sdd": true
+  }
+}
