@@ -1,90 +1,98 @@
 # CTF Diary
 
-CTF 选手日常桌面工具 — 比赛管理、附件整理、日志打卡、笔记编辑。
+CTF 选手桌面端日常工具 — 集比赛管理、题目追踪、文件管理、日志打卡、代码编辑于一体。
+
+![Platform](https://img.shields.io/badge/platform-Windows-blue)
+![Electron](https://img.shields.io/badge/electron-33-47848f)
+![Vue](https://img.shields.io/badge/vue-3-4fc08d)
+![TypeScript](https://img.shields.io/badge/typescript-5-3178c6)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+## 功能概览
+
+| 模块 | 功能 |
+|------|------|
+| 🏆 **比赛管理** | 从 CTFtime 拉取比赛、一键参加、进度追踪 |
+| 🎯 **题目追踪** | 按分类创建题目、三态切换（未解/尝试中/已解）、进度条 |
+| 📁 **文件管理** | 多比赛文件树、拖拽导入、题目状态图标、**导出 ZIP** |
+| ✏️ **编辑器** | 多标签页、Markdown/Python、实时预览、一键运行 |
+| 📝 **日志打卡** | 日历视图、Markdown 日志、连续打卡统计 |
+| 🔔 **比赛通知** | 系统原生弹窗提醒比赛临近、可配置提前天数 |
+| ⚙️ **个性化** | 自定义背景、明暗主题、卡片透明度、自定义存储路径 |
 
 ## 技术栈
 
-Electron 33 + Vue 3 + TypeScript + Tailwind CSS + SQLite
+- **桌面框架**: Electron 33
+- **前端**: Vue 3 + Pinia + Vue Router + Tailwind CSS
+- **语言**: TypeScript
+- **数据库**: better-sqlite3 (WAL 模式)
+- **编辑器**: CodeMirror 6
+- **Markdown**: markdown-it + highlight.js
+- **打包**: electron-builder (NSIS)
 
-## 快速启动
+## 快速开始
+
+### 环境要求
+
+- Node.js >= 18
+- npm >= 9
+- Windows 10+（目前仅支持 Windows）
+
+### 开发
 
 ```bash
+# 安装依赖
 npm install
-npm run dev          # 开发模式
-npm run build        # 仅编译
-npm run package      # 编译 + 打包安装包 → release/
+
+# 启动开发模式（HMR）
+npm run dev
+
+# 编译
+npm run build
+
+# 打包 NSIS 安装程序
+npm run package
 ```
+
+### 安装使用
+
+下载 `release/CTF-Diary-Setup-1.0.0.exe`，双击安装。
 
 ## 项目结构
 
 ```
-src/
-├── main/            # Electron 主进程
-│   ├── index.ts     # 入口 + 窗口管理
-│   ├── db/          # SQLite 初始化 + 迁移
-│   ├── ipc/         # IPC 处理器（8 个模块）
-│   ├── services/    # CTFtime API + 文件系统
-│   └── utils/       # 路径工具
-├── preload/         # contextBridge API
-├── renderer/        # Vue 前端
-│   ├── views/       # 7 个页面
-│   ├── stores/      # 4 个 Pinia store
-│   ├── components/  # 布局 / 编辑器 / 文件树
-│   ├── router/      # Vue Router 配置
-│   ├── types/       # TS 类型定义
-│   └── assets/      # CSS（主题 + 组件类）
+ctf-diary/
+├── src/
+│   ├── main/              # Electron 主进程
+│   │   ├── index.ts       # 入口（窗口创建 + 生命周期）
+│   │   ├── db/            # SQLite 数据库初始化
+│   │   ├── ipc/           # IPC 处理器
+│   │   │   ├── challenges.ts    # 题目 CRUD
+│   │   │   ├── competition.ts   # 比赛管理
+│   │   │   ├── files.ts         # 文件 + 导出
+│   │   │   ├── notifications.ts # 比赛通知
+│   │   │   └── ...
+│   │   ├── services/      # 业务服务
+│   │   └── utils/         # 工具函数
+│   ├── preload/           # contextBridge API
+│   └── renderer/          # Vue 前端
+│       ├── views/         # 7 个页面
+│       ├── components/    # UI 组件
+│       ├── stores/        # Pinia 状态管理
+│       └── types/         # TypeScript 类型
+├── docs/                  # 文档
+│   ├── spec.md            # 功能规格说明
+│   ├── design.md          # 技术设计文档
+│   └── tasks.md           # 开发任务拆解
+└── package.json
 ```
-
-## 页面
-
-| 页面 | 路径 | 功能 |
-|------|------|------|
-| 仪表盘 | `/` | 打卡统计、连续天数、近期比赛、快捷入口 |
-| 比赛管理 | `/competitions` | CTFtime 赛事拉取、参加、分类浏览 |
-| 比赛详情 | `/competitions/:id` | 元信息、PWN/RE/笔记文件 |
-| 文件管理 | `/files` | 文件树浏览、拖拽导入、文件预览 |
-| 编辑器 | `/editor/:type` | Markdown/Python 编辑、Python 运行 |
-| 日志打卡 | `/diary` | 日历打卡、Markdown 日志、标签/心情 |
-| 设置 | `/settings` | 背景、主题、卡片透明度、数据管理 |
-
-## IPC 通道
-
-| 命名空间 | 通道 | 方向 |
-|---------|------|------|
-| `settings` | get/set/getAll | renderer → main |
-| `competitions` | getList/getFromCtftime/participate/getDetail | renderer → main |
-| `files` | readDir/readFile/writeFile/deleteFile/importFile/getCompetitionDir | renderer → main |
-| `diary` | checkIn/getCheckins/getDayLog/getStats | renderer → main |
-| `python` | checkPython/runScript | renderer → main |
-| `data` | getStats/clear* | renderer → main |
-| `dialog` | openImage/openFile/removeBackground | renderer → main |
-| `app` | getVersion/openExternal | renderer → main |
-
-## 数据库
-
-SQLite（better-sqlite3，同步 API，WAL 模式）
-
-4 张表：`competitions` / `checkins` / `file_tags` / `settings`
-
-数据目录：开发模式 `data/`，生产模式 `%APPDATA%/ctf-diary/`
-
-## 打包
-
-NSIS 安装包：`release/CTF-Diary-Setup-1.0.0.exe`
-
-关键配置：
-- `asar: false` — better-sqlite3 原生模块需要真实路径
-- `build.files` — 只包含 `out/**/*`
-- dependencies（better-sqlite3 等）由 electron-builder 自动包含
-
-## 注意事项
-
-- 修改 `.ts` 源文件后确保 `src/` 下没有残留 `.js` 文件，否则 Vite 优先读取 `.js`
-- 首次启动安装版约 2-3 秒（Electron + SQLite 初始化）
-- 开发模式下需桌面环境（不能 headless 运行）
 
 ## 文档
 
 - [功能规格说明书](docs/spec.md)
 - [技术设计文档](docs/design.md)
 - [开发任务拆解](docs/tasks.md)
+
+## 许可
+
+MIT License
