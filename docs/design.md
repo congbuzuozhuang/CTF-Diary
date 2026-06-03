@@ -1,6 +1,6 @@
 # CTF Diary — 技术设计文档
 
-> 版本: v1.0 | 日期: 2026-06-02 | 状态: 已完成
+> 版本: v1.1 | 日期: 2026-06-03 | 状态: 已实现
 
 ---
 
@@ -10,13 +10,13 @@
 |---|------|------|
 | **桌面框架** | Electron 33 | 跨平台桌面应用 |
 | **前端框架** | Vue 3 + Composition API | 组件化开发 |
-| **构建工具** | electron-vite 2 | Electron + Vite 集成 |
+| **构建工具** | electron-vite 5 | Electron + Vite 集成 |
 | **样式** | Tailwind CSS 3 | 原子化 CSS |
 | **状态管理** | Pinia | Vue 3 官方推荐 |
 | **路由** | Vue Router 4 | SPA 页面切换 |
 | **数据库** | better-sqlite3 12 | 同步 API，主进程友好 |
 | **Markdown** | markdown-it + highlight.js | 渲染 + 代码高亮 |
-| **编辑器** | CodeMirror 6 | Markdown / Python 编辑 |
+| **编辑器** | CodeMirror 6 + @lezer/highlight | Markdown / Python 编辑，主题可切换 |
 | **打包** | electron-builder 25 | NSIS 安装包 |
 | **语言** | TypeScript 5 | 类型安全 |
 
@@ -26,16 +26,17 @@
 ctf-diary/
 ├── src/
 │   ├── main/                          # Electron 主进程
-│   │   ├── index.ts                   # 入口：窗口管理 + 生命周期
+│   │   ├── index.ts                   # 入口：无边框窗口 + 生命周期
 │   │   ├── db/
 │   │   │   └── index.ts               # SQLite 初始化 + 迁移 + 默认值
 │   │   ├── ipc/                       # IPC 处理器（每个文件一个模块）
-│   │   │   ├── app.ts                 # app:getVersion / app:openExternal
+│   │   │   ├── app.ts                 # app:getVersion / window:* 控制 / openExternal
+│   │   │   ├── challenges.ts          # 题目 CRUD + 状态更新 + compSolved 自动推导
 │   │   │   ├── competition.ts         # 比赛 CRUD + CTFtime 拉取
-│   │   │   ├── data.ts                # 数据统计 + 清理（v1.0 新增）
+│   │   │   ├── data.ts                # 数据统计 + 清理（FS+DB 双删）
 │   │   │   ├── dialog.ts              # 文件选择 / 图片选择 对话框
 │   │   │   ├── diary.ts               # 打卡 CRUD + 连续天数统计
-│   │   │   ├── files.ts               # 文件读写 + 目录遍历 + 导入
+│   │   │   ├── files.ts               # 文件读写 + 目录遍历 + 导入 + 创建目录
 │   │   │   ├── python.ts              # Python 版本检测 + 脚本执行
 │   │   │   └── settings.ts            # 设置读写（key-value）
 │   │   ├── services/
@@ -53,33 +54,36 @@ ctf-diary/
 │   │   ├── router/
 │   │   │   └── index.ts               # 路由表（7 个路由）
 │   │   ├── stores/
+│   │   │   ├── challenges.ts          # 题目 CRUD + 进度计算 + 状态图标/标签
 │   │   │   ├── competitions.ts        # 比赛列表 / CTFtime 拉取 / participate
 │   │   │   ├── diary.ts               # 打卡列表 / 统计 / checkIn
-│   │   │   ├── files.ts               # 文件树 / 读写
+│   │   │   ├── editorTabs.ts          # 编辑器多标签页状态
+│   │   │   ├── files.ts               # 文件树 / 多比赛文件组
 │   │   │   └── settings.ts            # 设置 CRUD + 主题/透明度应用
 │   │   ├── types/
-│   │   │   ├── index.ts               # TypeScript 类型定义
+│   │   │   ├── index.ts               # TypeScript 类型定义（含 Challenge）
 │   │   │   └── electron.d.ts          # window.api 类型声明
 │   │   ├── components/
 │   │   │   ├── layout/
 │   │   │   │   ├── MainLayout.vue     # Sidebar + TopBar + 内容区
 │   │   │   │   ├── Sidebar.vue        # 左侧导航（6 项 + 折叠）
-│   │   │   │   └── TopBar.vue         # 顶部栏（标题 + 打卡状态）
+│   │   │   │   └── TopBar.vue         # 自定义标题栏（拖拽 + 窗口控制 + 打卡状态）
 │   │   │   ├── common/
-│   │   │   │   └── Background.vue     # 背景图片层
+│   │   │   │   └── Background.vue     # 背景图片层（CSS 变量覆盖层）
 │   │   │   ├── editor/
-│   │   │   │   ├── MdEditor.vue       # CodeMirror 6 Markdown/Python 编辑器
-│   │   │   │   ├── MdPreview.vue      # markdown-it 预览
-│   │   │   │   └── CodeViewer.vue     # 只读代码查看器（Python 高亮）
+│   │   │   │   ├── MdEditor.vue       # CodeMirror 6（亮/暗主题适配、行号、补全）
+│   │   │   │   ├── MdPreview.vue      # markdown-it 预览（代码高亮 + 表格）
+│   │   │   │   ├── CodeViewer.vue     # 只读代码查看器
+│   │   │   │   └── cmTheme.ts         # 自定义亮色主题（蓝色光标、灰蓝选中）
 │   │   │   └── files/
-│   │   │       ├── FileTree.vue       # 递归文件树容器
-│   │   │       └── FileTreeNode.vue   # 单个树节点（展开/折叠/图标）
+│   │   │       ├── FileTree.vue       # 递归文件树容器（传递 challengePathMap）
+│   │   │       └── FileTreeNode.vue   # 单个树节点（展开/折叠/状态图标）
 │   │   ├── views/
 │   │   │   ├── Dashboard.vue          # 首页：统计卡片 + 近期比赛 + 快捷入口
-│   │   │   ├── Competitions.vue       # 比赛管理：CTFtime / 参加 / 已结束
-│   │   │   ├── CompetitionDetail.vue  # 比赛详情：元信息 + 文件 + 笔记
-│   │   │   ├── FileManager.vue        # 文件管理：树 + 预览 + 拖拽导入
-│   │   │   ├── Editor.vue             # 编辑器：Markdown/Python 编辑 + 运行
+│   │   │   ├── Competitions.vue       # 比赛管理：CTFtime / 参加 / 已解决 / 已结束
+│   │   │   ├── CompetitionDetail.vue  # 比赛详情：进度条 + 题目列表 + 附件
+│   │   │   ├── FileManager.vue        # 文件管理：多比赛展开 + 新建题目 + 删除确认
+│   │   │   ├── Editor.vue             # 编辑器：多标签页 + 文件树侧栏 + 状态栏
 │   │   │   ├── Diary.vue              # 日志打卡：日历 + 日志编辑 + 标签
 │   │   │   └── Settings.vue           # 设置：背景/主题/透明度/数据管理
 │   │   └── assets/
@@ -95,7 +99,6 @@ ctf-diary/
 ├── tsconfig.node.json                 # 主进程 + preload 的 TS 配置
 ├── tsconfig.web.json                  # 渲染进程的 TS 配置
 ├── env.d.ts                           # Vite 环境变量类型
-├── test-electron.js                   # Electron 启动测试脚本
 └── docs/                              # 文档
     ├── spec.md                        # 功能规格说明书
     ├── design.md                      # 技术设计文档（本文件）
@@ -117,11 +120,14 @@ ctf-diary/
 ┌──────────────────────┴───────────────────────────┐
 │                 Preload (src/preload/index.ts)      │
 │   window.api.competitions.getList()               │
+│   window.api.challenges.create()                  │
 │   window.api.files.readDir()                      │
 │   window.api.diary.checkIn()                      │
 │   window.api.python.runScript()                   │
 │   window.api.settings.get() / .set()              │
 │   window.api.data.getStats() / .clear*()          │
+│   window.api.window.minimize/maximize/close       │
+│   window.api.dialog.openFile() / openImage()      │
 └──────────────────────┬───────────────────────────┘
                        │  ipcMain.handle()
 ┌──────────────────────┴───────────────────────────┐
@@ -141,17 +147,18 @@ ctf-diary/
 - **同步 SQLite**：`better-sqlite3` 提供同步 API，比异步 `sqlite3` 更适合 Electron 主进程
 - **WAL 模式**：`journal_mode = WAL` 允许并发读写，不会阻塞渲染进程
 - **contextBridge**：渲染进程不直接访问 Node.js API，所有系统调用通过 `ipcRenderer.invoke()` 经 preload 转发
-- **包内文件排除**：`package.json` 的 `build.files` 只包含 `out/**/*`，`node_modules/better-sqlite3` 由 electron-builder 自动包含
+- **无边框窗口**：`frame: false, titleBarStyle: 'hidden'`，自定义窗口控件通过 IPC 控制
+- **编辑器主题**：通过 `useSettingsStore` 监听主题变化，销毁并重建 CodeMirror 实例来切换亮/暗主题
 
 ## 4. 路由设计
 
 | 路径 | 页面组件 | 说明 |
 |------|---------|------|
 | `/` | Dashboard | 首页：统计卡片 + 近期比赛 + 快捷入口 |
-| `/competitions` | Competitions | 比赛管理：CTFtime 列表 / 我的比赛 / 已结束 |
-| `/competitions/:id` | CompetitionDetail | 比赛详情：元信息 + 文件 + 笔记 |
-| `/files` | FileManager | 文件管理：按比赛分组的文件树 + 预览 |
-| `/editor/:type/:id?` | Editor | 编辑器：type=markdown|python，可传入文件路径 |
+| `/competitions` | Competitions | 比赛管理：CTFtime 列表 / 我的比赛 / 已结束 / 已解决 |
+| `/competitions/:id` | CompetitionDetail | 比赛详情：进度条 + 题目列表 + 附件 + 笔记 |
+| `/files` | FileManager | 文件管理：按比赛分组文件树 + 题目状态图标 |
+| `/editor/:type/:id?` | Editor | 编辑器：类型=markdown\|file\|notes，支持多标签页 |
 | `/diary` | Diary | 日志打卡：日历 + Markdown 编辑 + 标签/心情 |
 | `/settings` | Settings | 设置：背景/主题/透明度/数据管理 |
 
@@ -169,11 +176,24 @@ CREATE TABLE competitions (
   format      TEXT,               -- Jeopardy / Attack-Defense / Mixed
   weight      REAL,
   status      TEXT DEFAULT 'upcoming',  -- upcoming/running/participating/finished
+  solved      INTEGER DEFAULT 0,       -- 题目全部解决后自动设为 1
   directory   TEXT,               -- 本地目录路径
   notes       TEXT,
   created_at  TEXT DEFAULT (datetime('now', 'localtime'))
 );
 CREATE UNIQUE INDEX idx_competitions_ctftime_id ON competitions(ctftime_id);
+
+-- 题目表 (v1.1 新增)
+CREATE TABLE challenges (
+  id              INTEGER PRIMARY KEY AUTOINCREMENT,
+  competition_id  INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,           -- 题目名称，如 "baby-bof"
+  category        TEXT DEFAULT '',         -- pwn / re / web / crypto / misc
+  status          TEXT DEFAULT 'unsolved', -- unsolved / attempting / solved
+  directory       TEXT,                    -- 题目文件夹路径
+  notes           TEXT,
+  created_at      TEXT DEFAULT (datetime('now', 'localtime'))
+);
 
 -- 打卡表
 CREATE TABLE checkins (
@@ -210,9 +230,15 @@ CREATE TABLE settings (
 │   └── custom_<timestamp>.jpg
 └── competitions/                        # 比赛文件
     └── {competition_id}/                # 每场比赛一个目录
-        ├── pwn/                         # PWN 题目附件
-        ├── re/                          # RE 题目附件
-        └── notes/                       # 笔记文件
+        ├── pwn/                         # PWN 分类
+        │   ├── baby-bof/                # 题目文件夹（Challenge）
+        │   │   ├── exploit.py
+        │   │   └── notes.md
+        │   └── heap-master/             # 另一个题目文件夹
+        ├── re/                          # RE 分类
+        │   └── crackme/
+        └── notes/                       # 通用笔记
+            └── summary.md
 ```
 
 ## 7. CSS 主题系统
@@ -239,12 +265,16 @@ CREATE TABLE settings (
   --card-opacity: 0.85;
   --card-bg: rgba(var(--card-bg-rgb), var(--card-opacity));
   --card-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+
+  /* 背景图片覆盖层 */
+  --bg-overlay: rgba(255, 255, 255, 0.7);
 }
 
 :root.dark {
   --bg-primary: #0f172a;
   --bg-secondary: #1e293b;
   --bg-tertiary: #334155;
+  --bg-overlay: rgba(15, 23, 42, 0.8);
   /* ... 暗色覆盖 ... */
 }
 ```
@@ -265,6 +295,17 @@ CREATE TABLE settings (
 `--card-bg` 通过 `rgba(var(--card-bg-rgb), var(--card-opacity))` 自动重新计算。
 滑块范围 40% ~ 100%，默认 85%，实时生效。
 
+### 7.4 CodeMirror 主题
+
+编辑器使用两套主题跟随 app 明暗切换：
+
+| 模式 | 主题 | 来源 |
+|------|------|------|
+| 亮色 | 自定义亮色主题 | [cmTheme.ts](../src/components/editor/cmTheme.ts) |
+| 暗色 | oneDark | `@codemirror/theme-one-dark` |
+
+切换时通过 Vue `:key` 绑定强制重建 EditorView 实例。
+
 ## 8. CTFtime 集成
 
 - **API**: `https://ctftime.org/api/v1/events/?limit=100`
@@ -273,7 +314,33 @@ CREATE TABLE settings (
 - **状态推断**: 根据 `start`/`finish` 时间自动标记 `upcoming`/`running`/`finished`
 - **事务保护**: 批量写入使用 `db.transaction()`
 
-## 9. 打包配置
+## 9. 题目系统 (Challenge System)
+
+### 9.1 状态流转
+
+```
+unsolved ──→ attempting ──→ solved ──→ unsolved
+   ⚪            🟡            🟢
+```
+
+### 9.2 视觉编码
+
+| 位置 | 解决 | 尝试中 | 未解决 |
+|------|------|--------|--------|
+| 比赛卡片左边缘 | 绿色 | — | — |
+| 比赛卡片徽章 | ✅ 已解决 | 🔶 X/Y | — |
+| 进度条 | 绿色满 | 黄色部分 | — |
+| 题目文件夹图标 | 绿点 | 黄点 | 灰点 |
+| 题目名字 | 绿色 | 黄色 | 默认色 |
+| 子文件继承 | 绿色 | 黄色 | 默认色 |
+
+### 9.3 自动推导
+
+- 全部题目 solved → `competitions.solved = 1`
+- 有题目但非全 solved → `competitions.solved = 0`
+- 无题目 → `competitions.solved = 0`（手动创建题目是前提）
+
+## 10. 打包配置
 
 ```json
 {
@@ -294,10 +361,10 @@ CREATE TABLE settings (
 ```
 
 - **asar: false** — 必须，因为 `better-sqlite3` 是原生模块，需要真实文件路径
-- **files** — 只包含 `out/**/*`，dependencies（better-sqlite3, markdown-it, highlight.js）由 electron-builder 自动包含
+- **files** — 只包含 `out/**/*`，dependencies 由 electron-builder 自动包含
 - **NSIS** — 标准安装程序，可选安装路径
 
-## 10. 开发命令
+## 11. 开发命令
 
 ```bash
 npm run dev          # 开发模式（HMR）
@@ -306,7 +373,7 @@ npm run package      # 编译 + 打包 NSIS 安装包
 npm run postinstall  # 重新编译原生模块（better-sqlite3）
 ```
 
-## 11. 常见问题
+## 12. 常见问题
 
 ### Q: 修改 .ts 源码后编译没变化？
 A: 检查 `src/` 下是否有残留的 `.js` 文件（某次 tsc 编译产物），Vite 会优先使用 `.js`。
@@ -314,5 +381,8 @@ A: 检查 `src/` 下是否有残留的 `.js` 文件（某次 tsc 编译产物）
 ### Q: 打包后提示找不到 better-sqlite3？
 A: 确保 `asar: false`，且 `build.files` 没有 `!node_modules/**/*` 排除规则。
 
-### Q: 启动慢？
-A: NSIS 安装版比 portable 版启动快（无需每次解压）。首次启动需加载 Electron + SQLite，正常约 2-3 秒。
+### Q: 开发模式无法启动（Electron 33 require 异常）？
+A: 这是已知 bug (electron/electron#49034)。`require('electron')` 在 dev 模式下解析到 npm 包而非内置模块。使用 `npm run package` 打包后运行即可。
+
+### Q: 编辑器在暗色模式下没有变化？
+A: CodeMirror 使用 `:key` 绑定强制重建实例。确保 `isDark` computed 正确响应主题变化。
