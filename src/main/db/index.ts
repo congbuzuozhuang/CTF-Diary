@@ -80,6 +80,18 @@ function runMigrations(database: Database.Database): void {
       competition_id  INTEGER REFERENCES competitions(id) ON DELETE CASCADE
     );
 
+    -- 题目表
+    CREATE TABLE IF NOT EXISTS challenges (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      competition_id  INTEGER NOT NULL REFERENCES competitions(id) ON DELETE CASCADE,
+      name            TEXT NOT NULL,
+      category        TEXT DEFAULT '',
+      status          TEXT DEFAULT 'unsolved',
+      directory       TEXT,
+      notes           TEXT,
+      created_at      TEXT DEFAULT (datetime('now', 'localtime'))
+    );
+
     -- 设置表
     CREATE TABLE IF NOT EXISTS settings (
       key   TEXT PRIMARY KEY,
@@ -92,6 +104,11 @@ function runMigrations(database: Database.Database): void {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_competitions_ctftime_id
     ON competitions(ctftime_id)
   `)
+
+  // Migrations for existing databases (column/table additions)
+  try {
+    database.exec(`ALTER TABLE competitions ADD COLUMN solved INTEGER DEFAULT 0`)
+  } catch { /* column already exists */ }
 
   // Insert default settings if not exist
   const insertDefault = database.prepare(

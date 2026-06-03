@@ -24,7 +24,8 @@ const api = {
     writeFile: (path: string, content: string) => ipcRenderer.invoke('files:writeFile', path, content),
     deleteFile: (path: string) => ipcRenderer.invoke('files:deleteFile', path),
     importFile: (source: string, dest: string) => ipcRenderer.invoke('files:importFile', source, dest),
-    getCompetitionDir: (id: number) => ipcRenderer.invoke('files:getCompetitionDir', id)
+    getCompetitionDir: (id: number) => ipcRenderer.invoke('files:getCompetitionDir', id),
+    createDirectory: (path: string) => ipcRenderer.invoke('files:createDirectory', path)
   },
 
   // Diary
@@ -53,6 +54,17 @@ const api = {
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
     isMaximized: () => ipcRenderer.invoke('window:isMaximized')
+  },
+
+  // Challenges
+  challenges: {
+    getByCompetition: (compId: number) => ipcRenderer.invoke('challenges:getByCompetition', compId),
+    create: (compId: number, name: string, category: string) => ipcRenderer.invoke('challenges:create', compId, name, category),
+    updateStatus: (id: number, status: string) => ipcRenderer.invoke('challenges:updateStatus', id, status),
+    update: (id: number, fields: { name?: string; category?: string; notes?: string }) =>
+      ipcRenderer.invoke('challenges:update', id, fields),
+    delete: (id: number, keepFiles?: boolean) => ipcRenderer.invoke('challenges:delete', id, keepFiles),
+    updateCompSolved: (compId: number) => ipcRenderer.invoke('challenges:updateCompSolved', compId)
   },
 
   // Dialog

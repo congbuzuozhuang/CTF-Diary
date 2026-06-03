@@ -9,6 +9,7 @@ import { registerPythonHandlers } from './ipc/python'
 import { registerAppHandlers } from './ipc/app'
 import { registerDialogHandlers } from './ipc/dialog'
 import { registerDataHandlers } from './ipc/data'
+import { registerChallengeHandlers } from './ipc/challenges'
 
 const isDev = !app.isPackaged
 
@@ -60,6 +61,7 @@ function registerAllHandlers(): void {
   registerAppHandlers()
   registerDialogHandlers()
   registerDataHandlers()
+  registerChallengeHandlers()
 }
 
 app.whenReady().then(() => {

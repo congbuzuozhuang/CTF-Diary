@@ -11,6 +11,7 @@
       :depth="0"
       :selected-path="selectedPath"
       :active-path="activePath"
+      :challenge-path-map="challengePathMap"
       @select="$emit('select', $event)"
       @dblclick="$emit('dblclick', $event)"
     />
@@ -27,6 +28,7 @@ defineProps<{
   activePath?: string
   rootPath?: string
   placeholder?: string
+  challengePathMap?: Record<string, string>
 }>()
 
 defineEmits<{

@@ -63,6 +63,9 @@
       <template v-else-if="activeTab === 'participating'">
         还没有参加任何比赛 — 在 CTFtime 赛事中找到感兴趣的比赛并点击「参加」
       </template>
+      <template v-else-if="activeTab === 'solved'">
+        暂无已解决的比赛 — 在比赛详情页创建题目并标记为已解决
+      </template>
       <template v-else>
         暂无已结束的比赛
       </template>
@@ -73,7 +76,8 @@
       <div
         v-for="comp in filteredList"
         :key="comp.id"
-        class="card group cursor-pointer hover:border-[var(--border-hover)] transition-colors"
+        class="card group cursor-pointer hover:border-[var(--border-hover)] transition-colors border-l-2"
+        :class="comp.solved ? 'border-l-green-500' : ''"
         @click="$router.push(`/competitions/${comp.id}`)"
       >
         <div class="flex items-start justify-between gap-4">
@@ -115,6 +119,19 @@
               </svg>
               {{ getDuration(comp.start_date, comp.end_date) }}
             </div>
+            <!-- Challenge progress bar for participating comps -->
+            <div
+              v-if="comp.status === 'participating' && challengeProgress[comp.id] && challengeProgress[comp.id].total > 0"
+              class="mt-2"
+            >
+              <div class="w-full h-1.5 rounded-full bg-[var(--bg-tertiary)] overflow-hidden">
+                <div
+                  class="h-full rounded-full transition-all duration-500"
+                  :class="challengeProgress[comp.id].percent === 100 ? 'bg-green-500' : 'bg-yellow-500'"
+                  :style="{ width: challengeProgress[comp.id].percent + '%' }"
+                />
+              </div>
+            </div>
           </div>
 
           <!-- Right side: badges + action -->
@@ -136,6 +153,20 @@
               :class="statusBadgeClass(comp.status)"
             >
               {{ statusLabel(comp.status) }}
+            </span>
+            <!-- Solved badge for participating -->
+            <span
+              v-if="comp.status === 'participating' && comp.solved"
+              class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400"
+            >
+              ✅ 已解决
+            </span>
+            <!-- Partial progress for participating (not fully solved, has challenges) -->
+            <span
+              v-else-if="comp.status === 'participating' && challengeProgress[comp.id] && challengeProgress[comp.id].total > 0"
+              class="px-2 py-0.5 rounded text-xs font-medium bg-yellow-500/15 text-yellow-400"
+            >
+              🔶 {{ challengeProgress[comp.id].solved }}/{{ challengeProgress[comp.id].total }}
             </span>
           </div>
         </div>
@@ -161,15 +192,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useCompetitionsStore } from '@/stores/competitions'
+import { useChallengesStore } from '@/stores/challenges'
 import type { Competition } from '@/types'
 
 const store = useCompetitionsStore()
+const chStore = useChallengesStore()
 
-const activeTab = ref<'ctftime' | 'participating' | 'finished'>('ctftime')
+const activeTab = ref<'ctftime' | 'participating' | 'finished' | 'solved'>('ctftime')
+const challengeProgress = ref<Record<number, { total: number; solved: number }>>({})
 
 const tabs = computed(() => [
   { key: 'ctftime' as const, label: 'CTFtime 赛事', count: store.competitions.length },
   { key: 'participating' as const, label: '我参加的', count: store.participating.length },
+  { key: 'solved' as const, label: '已解决', count: store.participating.filter(c => c.solved === 1).length },
   { key: 'finished' as const, label: '已结束', count: store.finished.length }
 ])
 
@@ -181,6 +216,9 @@ const filteredList = computed(() => {
       break
     case 'finished':
       list = store.finished
+      break
+    case 'solved':
+      list = store.participating.filter(c => c.solved === 1)
       break
     default:
       // CTFtime tab shows all (upcoming + running)
@@ -195,8 +233,15 @@ const filteredList = computed(() => {
   })
 })
 
-onMounted(() => {
-  store.loadList()
+onMounted(async () => {
+  await store.loadList()
+  // Load challenge progress for participating competitions
+  for (const comp of store.participating) {
+    try {
+      await chStore.loadByCompetition(comp.id)
+      challengeProgress.value[comp.id] = chStore.getCompProgress(comp.id)
+    } catch { /* ignore */ }
+  }
 })
 
 async function handleFetchCtftime() {

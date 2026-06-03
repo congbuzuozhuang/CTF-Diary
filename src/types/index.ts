@@ -11,6 +11,19 @@ export interface Competition {
   status: 'upcoming' | 'participating' | 'finished'
   directory: string | null
   notes: string | null
+  solved: number
+  created_at: string
+}
+
+// ── Challenge ──
+export interface Challenge {
+  id: number
+  competition_id: number
+  name: string
+  category: string
+  status: 'unsolved' | 'solved' | 'attempting'
+  directory: string | null
+  notes: string | null
   created_at: string
 }
 

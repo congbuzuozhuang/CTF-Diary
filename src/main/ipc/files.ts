@@ -8,6 +8,7 @@ import {
   setupCompetitionDirs,
   getCompDir
 } from '../services/filesystem'
+import { mkdirSync, existsSync } from 'fs'
 
 export function registerFilesHandlers(): void {
   // Read directory tree
@@ -43,5 +44,13 @@ export function registerFilesHandlers(): void {
   // Create competition directory structure
   ipcMain.handle('files:setupCompetitionDirs', (_event, id: number) => {
     return setupCompetitionDirs(id)
+  })
+
+  // Create a directory
+  ipcMain.handle('files:createDirectory', (_event, dirPath: string) => {
+    if (!existsSync(dirPath)) {
+      mkdirSync(dirPath, { recursive: true })
+    }
+    return { success: true, path: dirPath }
   })
 }

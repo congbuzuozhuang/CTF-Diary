@@ -59,6 +59,15 @@
               </svg>
               <span class="text-sm font-medium truncate flex-1">{{ group.compName }}</span>
               <button
+                class="w-5 h-5 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-purple-400 hover:bg-purple-500/10 transition-colors shrink-0"
+                title="新建题目"
+                @click.stop="openCreateChallenge(group)"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+              </button>
+              <button
                 class="w-5 h-5 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-blue-400 hover:bg-blue-500/10 transition-colors shrink-0"
                 title="导入文件到此比赛"
                 @click.stop="importToCompetition(group)"
@@ -96,6 +105,7 @@
                 <FileTree
                   :entries="group.entries"
                   :selected-path="fileStore.selectedFile?.path"
+                  :challenge-path-map="challengePathMap"
                   @select="onFileSelect"
                   @dblclick="onFileDblClick"
                 />
@@ -204,6 +214,49 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Create challenge modal -->
+    <Teleport to="body">
+      <div
+        v-if="showCreateChallenge"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        @click.self="showCreateChallenge = false"
+      >
+        <div class="card w-96 space-y-4">
+          <h3 class="font-semibold text-lg">新建题目 — {{ createChallengeForm.compName }}</h3>
+          <div class="space-y-3">
+            <div>
+              <label class="text-xs text-[var(--text-muted)] block mb-1">题目名称</label>
+              <input
+                v-model="createChallengeForm.name"
+                class="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] outline-none focus:border-blue-400 transition-colors"
+                placeholder="如 baby-bof"
+                @keyup.enter="createNewChallenge"
+              />
+            </div>
+            <div>
+              <label class="text-xs text-[var(--text-muted)] block mb-1">分类</label>
+              <select
+                v-model="createChallengeForm.category"
+                class="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-sm text-[var(--text-primary)] outline-none focus:border-blue-400 transition-colors"
+              >
+                <option v-for="cat in challengeCategories" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+          </div>
+          <div class="flex gap-2 justify-end">
+            <button class="btn-secondary text-xs px-4 py-1.5" @click="showCreateChallenge = false">取消</button>
+            <button
+              class="btn-primary text-xs px-4 py-1.5"
+              :disabled="!createChallengeForm.name.trim()"
+              @click="createNewChallenge"
+            >
+              创建
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -212,12 +265,14 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFilesStore, type CompetitionFileGroup } from '@/stores/files'
 import { useCompetitionsStore } from '@/stores/competitions'
+import { useChallengesStore } from '@/stores/challenges'
 import FileTree from '@/components/files/FileTree.vue'
-import type { FileEntry } from '@/types'
+import type { FileEntry, Challenge } from '@/types'
 
 const router = useRouter()
 const fileStore = useFilesStore()
 const compStore = useCompetitionsStore()
+const chStore = useChallengesStore()
 
 // Track which competitions are expanded (all expanded by default)
 const expandedGroups = ref<Set<number>>(new Set())
@@ -225,6 +280,14 @@ const expandedGroups = ref<Set<number>>(new Set())
 // Delete confirmation state
 const deleteConfirm = ref<{ type: 'group' | 'file'; title: string; desc: string; payload: any } | null>(null)
 const deleting = ref(false)
+
+// Challenge path -> status map for file tree icons
+const challengePathMap = ref<Record<string, string>>({})
+
+// New challenge dialog
+const showCreateChallenge = ref(false)
+const createChallengeForm = ref({ compId: 0, compName: '', name: '', category: 'pwn' })
+const challengeCategories = ['pwn', 're', 'web', 'crypto', 'misc']
 
 const binaryExtensions = ['.exe', '.dll', '.so', '.bin', '.zip', '.tar', '.gz', '.7z', '.rar', '.png', '.jpg', '.jpeg', '.gif', '.bmp', '.ico', '.pdf']
 
@@ -253,8 +316,25 @@ onMounted(async () => {
     await fileStore.loadAllCompetitionFiles(participating)
     // Expand all by default
     expandedGroups.value = new Set(fileStore.fileGroups.map(g => g.compId))
+    // Load challenges for all participating competitions
+    await loadAllChallengeMaps()
   }
 })
+
+async function loadAllChallengeMaps() {
+  const map: Record<string, string> = {}
+  for (const comp of compStore.participating) {
+    try {
+      const challenges = await window.api.challenges.getByCompetition(comp.id)
+      for (const ch of challenges) {
+        if (ch.directory) {
+          map[ch.directory] = ch.status
+        }
+      }
+    } catch { /* ignore */ }
+  }
+  challengePathMap.value = map
+}
 
 function isExpanded(compId: number) {
   return expandedGroups.value.has(compId)
@@ -294,6 +374,7 @@ async function refreshAll() {
   if (participating.length > 0) {
     await fileStore.loadAllCompetitionFiles(participating)
   }
+  await loadAllChallengeMaps()
 }
 
 async function importToCompetition(group: CompetitionFileGroup) {
@@ -327,6 +408,33 @@ async function onDropToGroup(e: DragEvent, group: CompetitionFileGroup) {
 function copyFilePath() {
   if (fileStore.selectedFile?.path) {
     navigator.clipboard.writeText(fileStore.selectedFile.path)
+  }
+}
+
+// ── Challenge operations ──
+
+function openCreateChallenge(group: CompetitionFileGroup) {
+  createChallengeForm.value = { compId: group.compId, compName: group.compName, name: '', category: 'pwn' }
+  showCreateChallenge.value = true
+}
+
+async function createNewChallenge() {
+  if (!createChallengeForm.value.name.trim()) return
+  try {
+    await window.api.challenges.create(
+      createChallengeForm.value.compId,
+      createChallengeForm.value.name.trim(),
+      createChallengeForm.value.category
+    )
+    showCreateChallenge.value = false
+    // Refresh file tree and challenge maps
+    const group = fileStore.fileGroups.find(g => g.compId === createChallengeForm.value.compId)
+    if (group) {
+      await fileStore.refreshGroup(group.compId)
+    }
+    await loadAllChallengeMaps()
+  } catch (err) {
+    console.error('Failed to create challenge:', err)
   }
 }
 
