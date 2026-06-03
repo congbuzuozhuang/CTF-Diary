@@ -3,14 +3,14 @@
     <Sidebar />
     <TopBar />
     <main
-      class="relative z-10 overflow-y-auto transition-all duration-300"
+      class="relative z-10 flex flex-col overflow-hidden transition-all duration-300"
       :style="{
         paddingTop: 'var(--topbar-height)',
         paddingLeft: collapsed ? '64px' : '240px',
         height: '100vh'
       }"
     >
-      <div class="p-6">
+      <div class="p-6 flex-1 min-h-0 overflow-y-auto">
         <slot />
       </div>
     </main>

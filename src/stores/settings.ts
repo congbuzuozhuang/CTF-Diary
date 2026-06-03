@@ -7,7 +7,9 @@ const DEFAULTS: AppSettings = {
   theme: 'light',
   font_size: '16',
   language: 'zh',
-  card_opacity: '0.85'
+  card_opacity: '0.85',
+  notify_enabled: 'true',
+  notify_before_days: '3'
 }
 
 export const useSettingsStore = defineStore('settings', () => {

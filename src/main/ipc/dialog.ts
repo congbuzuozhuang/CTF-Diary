@@ -71,4 +71,21 @@ export function registerDialogHandlers(): void {
 
     return result.filePaths
   })
+
+  // Open directory picker
+  ipcMain.handle('dialog:openDirectory', async (_event, options?: { title?: string }) => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (!win) return null
+
+    const result = await dialog.showOpenDialog(win, {
+      title: options?.title || '选择文件夹',
+      properties: ['openDirectory']
+    })
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null
+    }
+
+    return result.filePaths[0]
+  })
 }

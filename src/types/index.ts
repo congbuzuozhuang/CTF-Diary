@@ -76,4 +76,6 @@ export interface AppSettings {
   font_size: string
   language: 'zh' | 'en'
   card_opacity: string
+  notify_enabled: string
+  notify_before_days: string
 }

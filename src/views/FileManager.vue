@@ -85,6 +85,15 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
                 </svg>
               </button>
+              <button
+                class="w-5 h-5 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-green-400 hover:bg-green-500/10 transition-colors shrink-0"
+                title="导出此比赛文件"
+                @click.stop="exportGroup(group)"
+              >
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                </svg>
+              </button>
             </div>
 
             <!-- File tree -->
@@ -375,6 +384,19 @@ async function refreshAll() {
     await fileStore.loadAllCompetitionFiles(participating)
   }
   await loadAllChallengeMaps()
+}
+
+// ── Export ──
+
+async function exportGroup(group: CompetitionFileGroup) {
+  try {
+    const result = await window.api.export_.competition(group.compId, group.compName, true)
+    if (!result.success) {
+      // User canceled
+    }
+  } catch (err) {
+    console.error('Export failed:', err)
+  }
 }
 
 async function importToCompetition(group: CompetitionFileGroup) {

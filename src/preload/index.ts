@@ -14,7 +14,9 @@ const api = {
     getList: () => ipcRenderer.invoke('competitions:getList'),
     getFromCtftime: () => ipcRenderer.invoke('competitions:getFromCtftime'),
     participate: (id: number) => ipcRenderer.invoke('competitions:participate', id),
-    getDetail: (id: number) => ipcRenderer.invoke('competitions:getDetail', id)
+    getDetail: (id: number) => ipcRenderer.invoke('competitions:getDetail', id),
+    create: (data: { name: string; start_date: string; end_date: string; format?: string; url?: string; weight?: number; auto_participate?: boolean }) =>
+      ipcRenderer.invoke('competitions:create', data)
   },
 
   // Files
@@ -72,7 +74,8 @@ const api = {
     openImage: () => ipcRenderer.invoke('dialog:openImage'),
     removeBackground: (path: string) => ipcRenderer.invoke('dialog:removeBackground', path),
     openFile: (options?: { title?: string; filters?: { name: string; extensions: string[] }[] }) =>
-      ipcRenderer.invoke('dialog:openFile', options)
+      ipcRenderer.invoke('dialog:openFile', options),
+    openDirectory: (options?: { title?: string }) => ipcRenderer.invoke('dialog:openDirectory', options)
   },
 
   // Data management
@@ -84,6 +87,26 @@ const api = {
     clearAll: () => ipcRenderer.invoke('data:clearAll'),
     clearCompetition: (compId: number) => ipcRenderer.invoke('data:clearCompetition', compId),
     deleteFile: (filePath: string) => ipcRenderer.invoke('data:deleteFile', filePath)
+  },
+
+  // Notifications
+  notifications: {
+    checkNow: () => ipcRenderer.invoke('notifications:checkNow'),
+    getEnabled: () => ipcRenderer.invoke('notifications:getEnabled'),
+    getBeforeDays: () => ipcRenderer.invoke('notifications:getBeforeDays')
+  },
+
+  // Config
+  config: {
+    getCompetitionsDir: () => ipcRenderer.invoke('config:getCompetitionsDir'),
+    setCompetitionsDir: (dirPath: string | null) => ipcRenderer.invoke('config:setCompetitionsDir', dirPath),
+    getDataDir: () => ipcRenderer.invoke('config:getDataDir')
+  },
+
+  // Export
+  export_: {
+    competition: (compId: number, compName: string, asZip: boolean) => ipcRenderer.invoke('export:competition', compId, compName, asZip),
+    challenge: (challengeDir: string, challengeName: string, asZip: boolean) => ipcRenderer.invoke('export:challenge', challengeDir, challengeName, asZip)
   }
 }
 

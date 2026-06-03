@@ -64,6 +64,28 @@ export const useCompetitionsStore = defineStore('competitions', () => {
     }
   }
 
+  async function create(data: {
+    name: string
+    start_date: string
+    end_date: string
+    format?: string
+    url?: string
+    weight?: number
+    auto_participate?: boolean
+  }): Promise<Competition | null> {
+    try {
+      const created = await window.api.competitions.create(data)
+      if (created) {
+        competitions.value.unshift(created)
+        return created
+      }
+      return null
+    } catch (err) {
+      console.error('Failed to create competition:', err)
+      return null
+    }
+  }
+
   function getById(id: number): Competition | undefined {
     return competitions.value.find(c => c.id === id)
   }
@@ -78,6 +100,7 @@ export const useCompetitionsStore = defineStore('competitions', () => {
     loadList,
     fetchFromCtftime,
     participate,
+    create,
     getById
   }
 })

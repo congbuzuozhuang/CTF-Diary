@@ -89,4 +89,56 @@ export function registerCompetitionHandlers(): void {
     const db = getDatabase()
     return db.prepare('SELECT * FROM competitions WHERE id = ?').get(id)
   })
+
+  // Manually create a competition
+  ipcMain.handle('competitions:create', (_event, data: {
+    name: string
+    start_date: string
+    end_date: string
+    format?: string
+    url?: string
+    weight?: number
+    auto_participate?: boolean
+  }) => {
+    const db = getDatabase()
+
+    // Determine status based on dates
+    const now = new Date()
+    const start = new Date(data.start_date)
+    const end = new Date(data.end_date)
+
+    let status: string
+    if (data.auto_participate) {
+      status = 'participating'
+    } else if (end < now) {
+      status = 'finished'
+    } else if (start <= now && end >= now) {
+      status = 'running'
+    } else {
+      status = 'upcoming'
+    }
+
+    const result = db.prepare(`
+      INSERT INTO competitions (name, start_date, end_date, url, format, weight, status)
+      VALUES (@name, @start_date, @end_date, @url, @format, @weight, @status)
+    `).run({
+      name: data.name,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      url: data.url || '',
+      format: data.format || 'Jeopardy',
+      weight: data.weight ?? 0,
+      status
+    })
+
+    const newId = result.lastInsertRowid as number
+
+    // If auto-participate, set up directories
+    if (data.auto_participate) {
+      const dirPath = setupCompetitionDirs(newId)
+      db.prepare('UPDATE competitions SET directory = ? WHERE id = ?').run(dirPath, newId)
+    }
+
+    return db.prepare('SELECT * FROM competitions WHERE id = ?').get(newId)
+  })
 }

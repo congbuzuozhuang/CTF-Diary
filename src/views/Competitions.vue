@@ -3,13 +3,25 @@
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-2xl font-bold">🏆 比赛管理</h2>
-        <p class="text-[var(--text-secondary)] mt-1 text-sm">管理 CTF 比赛信息，从 CTFtime 获取最新赛事</p>
+        <p class="text-[var(--text-secondary)] mt-1 text-sm">管理 CTF 比赛信息，从 CTFtime 获取或手动创建</p>
       </div>
-      <button
-        class="btn-primary"
-        :disabled="store.fetchingCtftime"
-        @click="handleFetchCtftime"
-      >
+      <div class="flex items-center gap-2">
+        <button
+          class="btn-primary"
+          @click="showCreateModal = true"
+        >
+          <span class="flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            创建比赛
+          </span>
+        </button>
+        <button
+          class="btn-secondary"
+          :disabled="store.fetchingCtftime"
+          @click="handleFetchCtftime"
+        >
         <span class="flex items-center gap-2">
           <svg
             class="w-4 h-4"
@@ -21,6 +33,7 @@
           {{ store.fetchingCtftime ? '获取中...' : '从 CTFtime 获取' }}
         </span>
       </button>
+      </div>
     </div>
 
     <!-- Tabs -->
@@ -58,7 +71,7 @@
       class="text-sm text-[var(--text-muted)] text-center py-12"
     >
       <template v-if="activeTab === 'ctftime'">
-        暂无比赛数据 — 点击上方按钮从 CTFtime 获取最新赛事
+        暂无赛事 — 点击上方按钮从 CTFtime 获取或手动创建比赛
       </template>
       <template v-else-if="activeTab === 'participating'">
         还没有参加任何比赛 — 在 CTFtime 赛事中找到感兴趣的比赛并点击「参加」
@@ -186,23 +199,343 @@
         </div>
       </div>
     </div>
+
+    <!-- Create Competition Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showCreateModal"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+        @click.self="closeCreateModal"
+      >
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+
+        <!-- Modal -->
+        <div class="relative w-full max-w-lg mx-4 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-2xl animate-fade-in">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-6 py-4 border-b border-[var(--border-color)]">
+            <h3 class="text-lg font-semibold">✨ 创建比赛</h3>
+            <button
+              class="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+              @click="closeCreateModal"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Body -->
+          <div class="px-6 py-4 space-y-4">
+            <!-- Name -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+                比赛名称 <span class="text-red-400">*</span>
+              </label>
+              <input
+                ref="nameInput"
+                v-model="form.name"
+                type="text"
+                placeholder="例如: HITCON CTF 2025"
+                class="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm
+                       focus:outline-none focus:border-blue-400 transition-colors placeholder:text-[var(--text-muted)]"
+                @keydown.enter="handleCreate"
+              />
+            </div>
+
+            <!-- Format -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">比赛格式</label>
+              <select
+                v-model="form.format"
+                class="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm
+                       focus:outline-none focus:border-blue-400 transition-colors"
+              >
+                <option value="Jeopardy">Jeopardy (解题赛)</option>
+                <option value="Attack-Defense">Attack-Defense (攻防赛)</option>
+                <option value="Mixed">Mixed (混合赛)</option>
+              </select>
+            </div>
+
+            <!-- Start date -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+                开始时间 <span class="text-red-400">*</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <input
+                  v-model="form.start_date"
+                  type="datetime-local"
+                  class="flex-1 px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm
+                         focus:outline-none focus:border-blue-400 transition-colors"
+                />
+              </div>
+              <!-- Quick date presets -->
+              <div class="flex items-center gap-1.5 mt-1.5">
+                <span class="text-xs text-[var(--text-muted)] mr-1">快捷:</span>
+                <button
+                  v-for="preset in datePresets"
+                  :key="preset.label"
+                  class="px-2.5 py-1 rounded text-xs bg-[var(--bg-tertiary)] text-[var(--text-secondary)]
+                         hover:bg-blue-500/15 hover:text-blue-400 transition-colors"
+                  @click="applyPreset(preset)"
+                >
+                  {{ preset.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- End date -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">
+                结束时间 <span class="text-red-400">*</span>
+              </label>
+              <input
+                v-model="form.end_date"
+                type="datetime-local"
+                class="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm
+                       focus:outline-none focus:border-blue-400 transition-colors"
+              />
+              <p class="text-xs text-[var(--text-muted)] mt-1">
+                设置开始时间后自动填充为开始+48小时，可手动修改
+              </p>
+            </div>
+
+            <!-- URL -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">比赛链接</label>
+              <input
+                v-model="form.url"
+                type="url"
+                placeholder="https://..."
+                class="w-full px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm
+                       focus:outline-none focus:border-blue-400 transition-colors placeholder:text-[var(--text-muted)]"
+              />
+            </div>
+
+            <!-- Weight -->
+            <div>
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-1.5">权重</label>
+              <input
+                v-model.number="form.weight"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="例如: 100"
+                class="w-32 px-3 py-2 bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-sm
+                       focus:outline-none focus:border-blue-400 transition-colors placeholder:text-[var(--text-muted)]"
+              />
+            </div>
+
+            <!-- Auto participate -->
+            <label class="flex items-center gap-2.5 cursor-pointer">
+              <input
+                v-model="form.auto_participate"
+                type="checkbox"
+                class="w-4 h-4 rounded border-[var(--border-color)] text-blue-500 bg-[var(--bg-tertiary)]
+                       focus:ring-blue-400 focus:ring-offset-0"
+              />
+              <span class="text-sm text-[var(--text-secondary)]">
+                直接参加（自动创建目录）
+              </span>
+            </label>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-[var(--border-color)]">
+            <button
+              class="px-4 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+              @click="closeCreateModal"
+            >
+              取消
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-medium bg-blue-500 text-white
+                     hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              :disabled="!form.name.trim() || !form.start_date || !form.end_date || creating"
+              @click="handleCreate"
+            >
+              <span v-if="creating" class="flex items-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                创建中...
+              </span>
+              <span v-else>✨ 创建比赛</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCompetitionsStore } from '@/stores/competitions'
 import { useChallengesStore } from '@/stores/challenges'
 import type { Competition } from '@/types'
 
 const store = useCompetitionsStore()
 const chStore = useChallengesStore()
+const router = useRouter()
 
 const activeTab = ref<'ctftime' | 'participating' | 'finished' | 'solved'>('ctftime')
 const challengeProgress = ref<Record<number, { total: number; solved: number }>>({})
+const showCreateModal = ref(false)
+const creating = ref(false)
+const nameInput = ref<HTMLInputElement | null>(null)
+
+// ── Date presets ──
+interface DatePreset {
+  label: string
+  getStart: () => Date
+  durationHours: number
+}
+
+const datePresets: DatePreset[] = [
+  {
+    label: '明天',
+    getStart: () => {
+      const d = new Date()
+      d.setDate(d.getDate() + 1)
+      d.setHours(9, 0, 0, 0)
+      return d
+    },
+    durationHours: 48
+  },
+  {
+    label: '本周末',
+    getStart: () => {
+      const d = new Date()
+      const day = d.getDay()
+      // Next Saturday
+      const daysUntilSat = day === 6 ? 0 : 6 - day
+      d.setDate(d.getDate() + daysUntilSat)
+      d.setHours(9, 0, 0, 0)
+      return d
+    },
+    durationHours: 48
+  },
+  {
+    label: '下周',
+    getStart: () => {
+      const d = new Date()
+      const day = d.getDay()
+      // Next Monday
+      const daysUntilMon = day === 1 ? 7 : (8 - day) % 7 || 7
+      d.setDate(d.getDate() + daysUntilMon)
+      d.setHours(9, 0, 0, 0)
+      return d
+    },
+    durationHours: 48
+  },
+  {
+    label: '下个月',
+    getStart: () => {
+      const d = new Date()
+      d.setMonth(d.getMonth() + 1, 1)
+      d.setHours(9, 0, 0, 0)
+      return d
+    },
+    durationHours: 48
+  }
+]
+
+// ── Form ──
+function defaultForm() {
+  const now = new Date()
+  // Round to nearest hour
+  now.setMinutes(0, 0, 0)
+  now.setHours(now.getHours() + 1)
+  const start = toLocalISO(now)
+  const end = toLocalISO(new Date(now.getTime() + 48 * 3600000))
+  return {
+    name: '',
+    format: 'Jeopardy',
+    start_date: start,
+    end_date: end,
+    url: '',
+    weight: 0,
+    auto_participate: true
+  }
+}
+
+const form = ref(defaultForm())
+
+function toLocalISO(date: Date): string {
+  const offset = date.getTimezoneOffset()
+  const local = new Date(date.getTime() - offset * 60000)
+  return local.toISOString().slice(0, 16)
+}
+
+// Auto-focus name input when modal opens
+watch(showCreateModal, async (val) => {
+  if (val) {
+    await nextTick()
+    nameInput.value?.focus()
+  }
+})
+
+// Auto-fill end date when start date changes
+watch(() => form.value.start_date, (newStart) => {
+  if (newStart) {
+    const start = new Date(newStart)
+    const end = new Date(start.getTime() + 48 * 3600000)
+    form.value.end_date = toLocalISO(end)
+  }
+})
+
+function applyPreset(preset: DatePreset) {
+  const start = preset.getStart()
+  form.value.start_date = toLocalISO(start)
+  const end = new Date(start.getTime() + preset.durationHours * 3600000)
+  form.value.end_date = toLocalISO(end)
+}
+
+function closeCreateModal() {
+  showCreateModal.value = false
+  form.value = defaultForm()
+}
+
+async function handleCreate() {
+  if (!form.value.name.trim() || !form.value.start_date || !form.value.end_date) return
+  if (creating.value) return
+
+  creating.value = true
+  try {
+    // Convert local datetime strings to ISO
+    const startDate = new Date(form.value.start_date).toISOString()
+    const endDate = new Date(form.value.end_date).toISOString()
+
+    const comp = await store.create({
+      name: form.value.name.trim(),
+      start_date: startDate,
+      end_date: endDate,
+      format: form.value.format,
+      url: form.value.url.trim() || undefined,
+      weight: form.value.weight || undefined,
+      auto_participate: form.value.auto_participate
+    })
+
+    if (comp) {
+      closeCreateModal()
+      // Navigate to detail if participated, otherwise switch to participating tab
+      if (form.value.auto_participate) {
+        router.push(`/competitions/${comp.id}`)
+      }
+    }
+  } catch (err) {
+    console.error('Failed to create competition:', err)
+  } finally {
+    creating.value = false
+  }
+}
 
 const tabs = computed(() => [
-  { key: 'ctftime' as const, label: 'CTFtime 赛事', count: store.competitions.length },
+  { key: 'ctftime' as const, label: '赛事', count: store.competitions.length },
   { key: 'participating' as const, label: '我参加的', count: store.participating.length },
   { key: 'solved' as const, label: '已解决', count: store.participating.filter(c => c.solved === 1).length },
   { key: 'finished' as const, label: '已结束', count: store.finished.length }
@@ -221,7 +554,7 @@ const filteredList = computed(() => {
       list = store.participating.filter(c => c.solved === 1)
       break
     default:
-      // CTFtime tab shows all (upcoming + running)
+      // All tab shows all (upcoming + running)
       list = store.competitions.filter(c => c.status === 'upcoming' || c.status === 'running')
       break
   }

@@ -12,6 +12,17 @@
       </div>
       <div class="flex items-center gap-2">
         <button
+          v-if="competition.status === 'participating' && competition.directory"
+          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-green-400 hover:bg-green-500/10 transition-colors"
+          title="导出比赛文件"
+          @click="exportCompetition"
+        >
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+          </svg>
+          导出
+        </button>
+        <button
           v-if="competition.status !== 'participating' && competition.status !== 'finished'"
           class="btn-primary text-sm"
           @click="handleParticipate"
@@ -161,6 +172,18 @@
             >
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+              </svg>
+            </button>
+
+            <!-- Export challenge -->
+            <button
+              v-if="ch.directory"
+              class="w-6 h-6 flex items-center justify-center rounded text-[var(--text-muted)] hover:text-green-400 hover:bg-green-500/10 transition-colors shrink-0 opacity-0 group-hover:opacity-100"
+              title="导出题目文件"
+              @click="exportChallenge(ch)"
+            >
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
               </svg>
             </button>
 
@@ -578,6 +601,26 @@ async function executeDeleteChallenge() {
 
 function openChallengeFolder(dirPath: string) {
   window.api.app.openExternal('file:///' + dirPath.replace(/\\/g, '/'))
+}
+
+// ── Export ──
+
+async function exportCompetition() {
+  if (!competition.value) return
+  try {
+    await window.api.export_.competition(competition.value.id, competition.value.name, true)
+  } catch (err) {
+    console.error('Export failed:', err)
+  }
+}
+
+async function exportChallenge(ch: Challenge) {
+  if (!ch.directory) return
+  try {
+    await window.api.export_.challenge(ch.directory, ch.name, true)
+  } catch (err) {
+    console.error('Export failed:', err)
+  }
 }
 
 // ── Styling helpers ──

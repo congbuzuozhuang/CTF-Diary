@@ -178,6 +178,7 @@ watch(() => props.dark, () => {
   font-size: 14px;
 }
 .md-editor .cm-editor .cm-scroller {
+  height: 100% !important;
   font-family: 'Consolas', 'Cascadia Code', 'Fira Code', 'Source Code Pro', 'JetBrains Mono', monospace;
 }
 .md-editor .cm-editor.cm-focused {

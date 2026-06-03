@@ -11,6 +11,7 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
+    "archiver": "^6.0.2",
     "better-sqlite3": "^12.10.0",
     "highlight.js": "^11.10.0",
     "markdown-it": "^14.1.0"
@@ -51,6 +52,7 @@
     "@codemirror/state": "^6.4.0",
     "@codemirror/theme-one-dark": "^6.1.0",
     "@codemirror/view": "^6.34.0",
+    "@types/archiver": "^7.0.0",
     "@types/better-sqlite3": "^7.6.13",
     "@vitejs/plugin-vue": "^5.1.0",
     "autoprefixer": "^10.4.20",

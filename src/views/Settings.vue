@@ -143,6 +143,58 @@
       </div>
     </section>
 
+    <!-- Notifications -->
+    <section class="card space-y-4">
+      <h3 class="font-semibold text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        比赛通知
+      </h3>
+
+      <!-- Enable toggle -->
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm">启用通知</p>
+          <p class="text-xs text-[var(--text-muted)]">比赛临近时弹窗提醒</p>
+        </div>
+        <button
+          class="relative w-10 h-5 rounded-full transition-colors duration-200"
+          :class="settingsStore.settings.notify_enabled === 'true' ? 'bg-blue-500' : 'bg-[var(--bg-tertiary)]'"
+          @click="settingsStore.set('notify_enabled', settingsStore.settings.notify_enabled === 'true' ? 'false' : 'true')"
+        >
+          <span
+            class="absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200"
+            :class="settingsStore.settings.notify_enabled === 'true' ? 'left-5' : 'left-0.5'"
+          />
+        </button>
+      </div>
+
+      <!-- Days before -->
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm">提前天数</p>
+          <p class="text-xs text-[var(--text-muted)]">比赛开始前多少天通知</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <span class="text-xs font-mono w-14 text-right text-[var(--text-secondary)]">
+            {{ settingsStore.settings.notify_before_days }} 天
+          </span>
+          <select
+            class="input w-auto text-xs"
+            :value="settingsStore.settings.notify_before_days"
+            @change="settingsStore.set('notify_before_days', ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="1">1 天</option>
+            <option value="2">2 天</option>
+            <option value="3">3 天</option>
+            <option value="5">5 天</option>
+            <option value="7">7 天</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
     <!-- General -->
     <section class="card space-y-4">
       <h3 class="font-semibold text-sm flex items-center gap-2">
@@ -186,6 +238,48 @@
             <option value="en">English</option>
           </select>
         </div>
+      </div>
+    </section>
+
+    <!-- Data directory -->
+    <section class="card space-y-4">
+      <h3 class="font-semibold text-sm flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+        比赛文件存储路径
+      </h3>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm">当前路径</p>
+            <p class="text-xs text-[var(--text-muted)] font-mono mt-0.5 break-all">{{ competitionsDir || '默认路径' }}</p>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs bg-blue-500/15 text-blue-400 hover:bg-blue-500/25 transition-colors"
+            @click="pickCompetitionsDir"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+            </svg>
+            选择文件夹
+          </button>
+          <button
+            v-if="customCompetitionsDir"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-red-400 hover:bg-red-400/10 transition-colors"
+            @click="resetCompetitionsDir"
+          >
+            恢复默认
+          </button>
+        </div>
+
+        <p class="text-xs text-[var(--text-muted)]">
+          比赛附件、题目文件夹、笔记将保存在此路径下。修改后新创建的比赛会使用新路径，已有比赛不受影响。
+        </p>
       </div>
     </section>
 
@@ -310,6 +404,12 @@ interface DataStats {
 const dataStats = ref<DataStats | null>(null)
 const showConfirm = ref<string | null>(null)
 const cleaning = ref(false)
+const customCompetitionsDir = ref<string | null>(null)
+const defaultDataDir = ref('')
+
+const competitionsDir = computed(() => {
+  return customCompetitionsDir.value || defaultDataDir.value + '\\competitions'
+})
 
 const confirmText = computed(() => {
   switch (showConfirm.value) {
@@ -322,7 +422,32 @@ const confirmText = computed(() => {
 
 onMounted(() => {
   loadStats()
+  loadDirs()
 })
+
+async function loadDirs() {
+  try {
+    customCompetitionsDir.value = await window.api.config.getCompetitionsDir()
+    defaultDataDir.value = await window.api.config.getDataDir()
+  } catch { /* ignore */ }
+}
+
+async function pickCompetitionsDir() {
+  try {
+    const dirPath = await window.api.dialog.openDirectory({
+      title: '选择比赛文件存储目录'
+    })
+    if (dirPath) {
+      await window.api.config.setCompetitionsDir(dirPath)
+      customCompetitionsDir.value = dirPath
+    }
+  } catch { /* ignore */ }
+}
+
+async function resetCompetitionsDir() {
+  await window.api.config.setCompetitionsDir(null)
+  customCompetitionsDir.value = null
+}
 
 async function loadStats() {
   try {

@@ -10,6 +10,7 @@ import { registerAppHandlers } from './ipc/app'
 import { registerDialogHandlers } from './ipc/dialog'
 import { registerDataHandlers } from './ipc/data'
 import { registerChallengeHandlers } from './ipc/challenges'
+import { registerNotificationHandlers, checkNotifications } from './ipc/notifications'
 
 const isDev = !app.isPackaged
 
@@ -62,6 +63,7 @@ function registerAllHandlers(): void {
   registerDialogHandlers()
   registerDataHandlers()
   registerChallengeHandlers()
+  registerNotificationHandlers()
 }
 
 app.whenReady().then(() => {
@@ -75,6 +77,14 @@ app.whenReady().then(() => {
 
   // Create window
   createWindow()
+
+  // Check for upcoming competition notifications after a short delay
+  setTimeout(() => {
+    const result = checkNotifications()
+    if (result.notified > 0) {
+      console.log(`[CTF Diary] Sent ${result.notified} notification(s)`)
+    }
+  }, 3000)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
