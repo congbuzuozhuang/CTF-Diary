@@ -1,6 +1,6 @@
 # CTF Diary — 技术设计文档
 
-> 版本: v1.2 | 日期: 2026-06-03 | 状态: 已实现
+> 版本: v1.3 | 日期: 2026-06-03 | 状态: 已实现
 
 ---
 
@@ -33,7 +33,7 @@ ctf-diary/
 │   │   ├── ipc/                       # IPC 处理器（每个文件一个模块）
 │   │   │   ├── app.ts                 # app:getVersion / window:* 控制 / openExternal
 │   │   │   ├── challenges.ts          # 题目 CRUD + 状态更新 + compSolved 自动推导
-│   │   │   ├── competition.ts         # 比赛 CRUD + CTFtime 拉取
+│   │   │   ├── competition.ts         # 比赛 CRUD + CTFtime 拉取 + 手动创建
 │   │   │   ├── data.ts                # 数据统计 + 清理（FS+DB 双删）
 │   │   │   ├── dialog.ts              # 文件选择 / 图片选择 / 文件夹选择
 │   │   │   ├── diary.ts               # 打卡 CRUD + 连续天数统计
@@ -82,7 +82,7 @@ ctf-diary/
 │   │   │       └── FileTreeNode.vue   # 单个树节点（展开/折叠/状态图标）
 │   │   ├── views/
 │   │   │   ├── Dashboard.vue          # 首页：统计卡片 + 近期比赛 + 快捷入口
-│   │   │   ├── Competitions.vue       # 比赛管理：CTFtime / 参加 / 已解决 / 已结束
+│   │   │   ├── Competitions.vue       # 比赛管理：赛事 / 参加 / 已解决 / 已结束 + 手动创建弹窗
 │   │   │   ├── CompetitionDetail.vue  # 比赛详情：进度条 + 题目列表 + 附件 + 导出
 │   │   │   ├── FileManager.vue        # 文件管理：多比赛展开 + 新建题目 + 导出 + 删除确认
 │   │   │   ├── Editor.vue             # 编辑器：多标签页 + 文件树侧栏 + 状态栏
@@ -330,6 +330,43 @@ MainLayout 使用 `flex flex-col` 布局方案：
 - **数据持久化**: `ON CONFLICT(ctftime_id) DO UPDATE` upsert 策略
 - **状态推断**: 根据 `start`/`finish` 时间自动标记 `upcoming`/`running`/`finished`
 - **事务保护**: 批量写入使用 `db.transaction()`
+
+### 8.1 手动创建比赛
+
+并非所有 CTF 比赛都在 CTFtime 上，用户可通过「创建比赛」按钮手动添加：
+
+**创建流程**：
+1. 点击「创建比赛」按钮 → 弹出模态对话框
+2. 填写比赛名称、选择格式、设置起止时间
+3. 可选择「直接参加」自动创建本地目录
+4. 提交 → 后端插入 DB → 前端列表即时刷新
+
+**便捷功能**：
+- **日期快捷预设**：明天 / 本周末 / 下周 / 下个月 — 一键填充开始时间
+- **结束时间自动推算**：修改开始时间 → 自动设为 +48h（CTF 常见时长，可手动修改）
+- **自动聚焦**：弹窗打开时光标自动定位到名称输入框
+- **Enter 快捷提交**：在名称输入框按 Enter 直接创建
+- **创建后跳转**：勾选「直接参加」→ 自动跳转到比赛详情页
+
+**IPC 接口**：
+```
+competitions:create(data) → Competition
+  data: {
+    name: string             // 必填
+    start_date: string       // 必填，ISO 8601
+    end_date: string         // 必填，ISO 8601
+    format?: string          // 默认 'Jeopardy'
+    url?: string
+    weight?: number
+    auto_participate?: boolean  // 默认 true，自动创建目录
+  }
+```
+
+**状态判定**（后端自动计算）：
+- `auto_participate = true` → `status = 'participating'`
+- 否则根据当前时间与起止日期比较 → `upcoming` / `running` / `finished`
+
+手动创建的比赛 `ctftime_id` 为 `NULL`，与 CTFtime 来源的比赛区分。
 
 ## 9. 题目系统 (Challenge System)
 
