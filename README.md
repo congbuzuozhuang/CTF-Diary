@@ -57,7 +57,7 @@ npm run package
 
 ### 安装使用
 
-下载 `release/CTF-Diary-Setup-1.0.0.exe`，双击安装。
+前往 [Releases 页面](https://github.com/congbuzuozhuang/CTF-Diary/releases) 下载最新版 `CTF-Diary-Setup-x.x.x.exe`，双击安装。
 
 ## 项目结构
 
