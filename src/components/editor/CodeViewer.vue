@@ -7,7 +7,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditorView } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { python } from '@codemirror/lang-python'
-import { oneDark } from '@codemirror/theme-one-dark'
+import { darkThemeExtension } from './cmTheme'
 import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
 
 const props = defineProps<{
@@ -29,7 +29,7 @@ onMounted(() => {
       extensions: [
         langExtension,
         syntaxHighlighting(defaultHighlightStyle),
-        oneDark,
+        darkThemeExtension,
         EditorState.readOnly.of(true),
         EditorView.lineWrapping,
         EditorView.editable.of(false)
@@ -61,10 +61,14 @@ watch(() => props.code, (newVal) => {
 .code-viewer {
   height: 100%;
   overflow: auto;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .code-viewer .cm-editor {
   height: 100%;
   font-size: 14px;
+  border-radius: 8px;
 }
 .code-viewer .cm-editor .cm-scroller {
   font-family: 'Consolas', 'Cascadia Code', 'Fira Code', 'Source Code Pro', 'JetBrains Mono', monospace;

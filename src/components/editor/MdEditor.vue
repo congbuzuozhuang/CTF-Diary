@@ -13,8 +13,7 @@ import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
 import { closeBrackets, autocompletion } from '@codemirror/autocomplete'
 import { bracketMatching } from '@codemirror/language'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
-import { oneDark } from '@codemirror/theme-one-dark'
-import { lightThemeExtension } from './cmTheme'
+import { lightThemeExtension, darkThemeExtension } from './cmTheme'
 
 const props = defineProps<{
   modelValue: string
@@ -41,7 +40,7 @@ onMounted(() => {
       ? markdown({ base: markdownLanguage, codeLanguages: [] })
       : []
 
-  const themeExtension = props.dark ? oneDark : lightThemeExtension
+  const themeExtension = props.dark ? darkThemeExtension : lightThemeExtension
 
   const extensions = [
     langExtension,
@@ -124,7 +123,7 @@ watch(() => props.dark, () => {
         ? markdown({ base: markdownLanguage, codeLanguages: [] })
         : []
 
-    const themeExtension = props.dark ? oneDark : lightThemeExtension
+    const themeExtension = props.dark ? darkThemeExtension : lightThemeExtension
 
     view = new EditorView({
       state: EditorState.create({
@@ -172,10 +171,14 @@ watch(() => props.dark, () => {
 .md-editor {
   height: 100%;
   overflow: auto;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 .md-editor .cm-editor {
   height: 100%;
   font-size: 14px;
+  border-radius: 8px;
 }
 .md-editor .cm-editor .cm-scroller {
   height: 100% !important;
