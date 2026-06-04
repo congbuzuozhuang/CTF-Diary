@@ -96,6 +96,34 @@ const api = {
     getBeforeDays: () => ipcRenderer.invoke('notifications:getBeforeDays')
   },
 
+  // CVE Management
+  cves: {
+    getList: () => ipcRenderer.invoke('cves:getList'),
+    getById: (id: number) => ipcRenderer.invoke('cves:getById', id),
+    create: (data: { cve_number: string; title?: string; severity?: string; cvss_score?: number; description?: string }) =>
+      ipcRenderer.invoke('cves:create', data),
+    update: (id: number, fields: Record<string, unknown>) =>
+      ipcRenderer.invoke('cves:update', id, fields),
+    delete: (id: number) => ipcRenderer.invoke('cves:delete', id),
+    updateStatus: (id: number, status: string) => ipcRenderer.invoke('cves:updateStatus', id, status)
+  },
+
+  // Docker Management
+  docker: {
+    checkAvailable: () => ipcRenderer.invoke('docker:checkAvailable'),
+    listImages: () => ipcRenderer.invoke('docker:listImages'),
+    importImage: (filePath: string, tag?: string) => ipcRenderer.invoke('docker:importImage', filePath, tag),
+    runContainer: (cveId: number, options: { imageName: string; portMappings?: string[]; envVars?: string[]; name?: string }) =>
+      ipcRenderer.invoke('docker:runContainer', cveId, options),
+    runTempContainer: (options: { imageName: string; portMappings?: string[]; envVars?: string[]; name?: string }) =>
+      ipcRenderer.invoke('docker:runTempContainer', options),
+    stopContainer: (containerId: string) => ipcRenderer.invoke('docker:stopContainer', containerId),
+    removeContainer: (containerId: string) => ipcRenderer.invoke('docker:removeContainer', containerId),
+    getContainerStatus: (containerId: string) => ipcRenderer.invoke('docker:getContainerStatus', containerId),
+    getContainerLogs: (containerId: string, lines?: number) => ipcRenderer.invoke('docker:getContainerLogs', containerId, lines),
+    linkImageToCve: (cveId: number, imageName: string) => ipcRenderer.invoke('docker:linkImageToCve', cveId, imageName)
+  },
+
   // Config
   config: {
     getCompetitionsDir: () => ipcRenderer.invoke('config:getCompetitionsDir'),

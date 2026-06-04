@@ -32,7 +32,8 @@
       "Bash(echo *)",
       "Bash(ls *)",
       "Bash(choco install *)",
-      "Bash(choco uninstall *)"
+      "Bash(choco uninstall *)",
+      "Bash(git *)"
     ]
   },
   "enabledPlugins": {

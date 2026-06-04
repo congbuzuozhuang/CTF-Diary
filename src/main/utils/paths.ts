@@ -74,3 +74,13 @@ export function getCompetitionsDir(): string {
 export function getCompetitionDir(competitionId: number): string {
   return join(getCompetitionsDir(), String(competitionId))
 }
+
+// ── CVE dirs ──
+
+export function getCvesDir(): string {
+  return join(getDataDir(), 'cves')
+}
+
+export function getCveDir(cveId: number): string {
+  return join(getCvesDir(), String(cveId))
+}

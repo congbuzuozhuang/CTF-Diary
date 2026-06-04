@@ -1,6 +1,6 @@
 import { mkdirSync, existsSync, readdirSync, statSync, readFileSync, writeFileSync, unlinkSync, copyFileSync, rmSync } from 'fs'
 import { join, basename } from 'path'
-import { getCompetitionDir } from '../utils/paths'
+import { getCompetitionDir, getCveDir } from '../utils/paths'
 
 export interface FileEntry {
   name: string
@@ -131,4 +131,50 @@ export function removeCompetitionDirs(competitionId: number): boolean {
  */
 export function getCompDir(competitionId: number): string {
   return getCompetitionDir(competitionId)
+}
+
+// ── CVE filesystem operations ──
+
+/**
+ * Create CVE directory structure.
+ */
+export function setupCveDirs(cveId: number): string {
+  const baseDir = getCveDir(cveId)
+
+  if (!existsSync(baseDir)) {
+    mkdirSync(baseDir, { recursive: true })
+  }
+
+  // Create subdirectories
+  const subdirs = ['exploits', 'poc', 'attachments']
+  for (const dir of subdirs) {
+    const dirPath = join(baseDir, dir)
+    if (!existsSync(dirPath)) {
+      mkdirSync(dirPath, { recursive: true })
+    }
+  }
+
+  // Create template files
+  const notesPath = join(baseDir, 'notes.md')
+  if (!existsSync(notesPath)) {
+    writeFileSync(notesPath, `# Notes\n\n## 漏洞分析\n\n## 复现步骤\n\n## 修复建议\n`, 'utf-8')
+  }
+
+  const writeupPath = join(baseDir, 'writeup.md')
+  if (!existsSync(writeupPath)) {
+    writeFileSync(writeupPath, `# Writeup\n\n## 基本信息\n\n## 漏洞原理\n\n## 复现环境\n\n## 利用过程\n\n## 参考链接\n`, 'utf-8')
+  }
+
+  return baseDir
+}
+
+/**
+ * Delete CVE directory and all contents.
+ */
+export function removeCveDirs(cveId: number): boolean {
+  const baseDir = getCveDir(cveId)
+  if (existsSync(baseDir)) {
+    rmSync(baseDir, { recursive: true, force: true })
+  }
+  return true
 }

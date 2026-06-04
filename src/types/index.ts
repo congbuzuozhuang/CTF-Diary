@@ -79,3 +79,55 @@ export interface AppSettings {
   notify_enabled: string
   notify_before_days: string
 }
+
+// ── CVE ──
+export interface Cve {
+  id: number
+  cve_number: string
+  title: string
+  severity: string
+  cvss_score: number
+  description: string
+  status: 'pending' | 'reproducing' | 'completed'
+  directory: string
+  docker_image: string
+  docker_container: string
+  notes: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateCveInput {
+  cve_number: string
+  title?: string
+  severity?: string
+  cvss_score?: number
+  description?: string
+}
+
+export interface CveUpdateFields {
+  cve_number?: string
+  title?: string
+  severity?: string
+  cvss_score?: number
+  description?: string
+  status?: string
+  docker_image?: string
+  docker_container?: string
+  notes?: string
+}
+
+export interface RunContainerOptions {
+  imageName: string
+  portMappings?: string[]
+  envVars?: string[]
+  name?: string
+}
+
+export interface DockerImageInfo {
+  Repository: string
+  Tag: string
+  ID: string
+  CreatedAt: string
+  Size: string
+}

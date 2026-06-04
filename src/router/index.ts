@@ -28,6 +28,18 @@ const router = createRouter({
       meta: { title: '文件管理', icon: 'folder' }
     },
     {
+      path: '/cves',
+      name: 'cves',
+      component: () => import('@/views/Cves.vue'),
+      meta: { title: 'CVE 复现', icon: 'bug' }
+    },
+    {
+      path: '/cves/:id',
+      name: 'cve-detail',
+      component: () => import('@/views/CveDetail.vue'),
+      meta: { title: 'CVE 详情', icon: 'bug' }
+    },
+    {
       path: '/editor/:type/:id?',
       name: 'editor',
       component: () => import('@/views/Editor.vue'),

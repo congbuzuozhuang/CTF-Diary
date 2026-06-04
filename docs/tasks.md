@@ -1,6 +1,6 @@
 # CTF Diary — 开发任务拆解
 
-> 总览: 10 个阶段，57 个任务，全部完成 ✅
+> 总览: 11 个阶段，71 个任务，全部完成 ✅
 
 ---
 
@@ -120,6 +120,25 @@
 | 10.5 | 自动填充结束时间 + 自动聚焦 + Enter 提交 | 便利性 | ✅ |
 | 10.6 | 文档更新至 v1.3 | 文档 | ✅ |
 
+## Phase 11: CVE 复现 + Docker 🐛🐳 (v1.4)
+
+| # | 任务 | 产出 | 状态 |
+|---|------|------|------|
+| 11.1 | DB 迁移：cves 表 + paths 扩展（getCvesDir/getCveDir） | 数据模型 | ✅ |
+| 11.2 | CVE IPC 处理器（getList/getById/create/update/delete/updateStatus） | 后端 API | ✅ |
+| 11.3 | CVE 文件系统服务（setupCveDirs/removeCveDirs + 模板文件生成） | 文件管理 | ✅ |
+| 11.4 | Docker IPC 处理器（checkAvailable/listImages/import/run/stop/logs/link） | Docker 后端 | ✅ |
+| 11.5 | Preload API 桥接 + TypeScript 类型定义（Cve/DockerImageInfo/RunContainerOptions） | 前后端连通 | ✅ |
+| 11.6 | CvesStore + DockerStore（状态管理 + computed 视图 + 严重程度/状态辅助） | 前端状态 | ✅ |
+| 11.7 | Sidebar 导航项 + /cves 和 /cves/:id 路由 | 导航入口 | ✅ |
+| 11.8 | Cves.vue — CVE 列表页（搜索 + 状态筛选 + 创建弹窗 + 严重程度色标 + Docker 指示器） | CVE 管理界面 | ✅ |
+| 11.9 | CveDetail.vue — 概览 Tab（信息卡片 + 内嵌 notes.md/writeup.md 编辑） | CVE 详情 | ✅ |
+| 11.10 | CveDetail.vue — 文件管理 Tab（文件树 + 内嵌编辑/预览 + 导入） | 文件管理 | ✅ |
+| 11.11 | CveDetail.vue — Docker 环境 Tab（镜像关联 + 后台/临时运行 + 端口映射 + 日志查看） | Docker 管理 | ✅ |
+| 11.12 | FileManager.vue 编辑模式增强（预览 ↔ 编辑切换 + 内嵌 MdEditor） | 编辑器便捷化 | ✅ |
+| 11.13 | 文档更新至 v1.4 (spec/design/tasks/README) | 文档 | ✅ |
+| 11.14 | 打包验证（npm run package） | 安装包 | ✅ |
+
 ---
 
 ## 依赖关系
@@ -138,6 +157,8 @@ Phase 1 (骨架) ──→ Phase 2 (数据层) ──→ Phase 3 (设置)
                                    Phase 9 (通知+导出+路径) ←──┘
                                                │
                                    Phase 10 (手动创建比赛) ←──┘
+                                               │
+                                   Phase 11 (CVE 复现 + Docker) ←──┘
 ```
 
-**实际顺序**: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10
+**实际顺序**: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11

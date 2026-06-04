@@ -163,19 +163,34 @@
                 删除
               </button>
               <button
-                v-if="fileStore.selectedFile.type === 'file'"
-                class="btn-ghost text-xs px-2 py-1 text-blue-400"
-                @click="openInEditor"
+                v-if="isTextFile"
+                class="btn-ghost text-xs px-2 py-1"
+                :class="editMode ? 'text-yellow-400' : 'text-blue-400'"
+                @click="toggleEditMode"
               >
-                编辑
+                {{ editMode ? '预览' : '编辑' }}
               </button>
             </div>
           </div>
 
           <!-- Content -->
           <div class="flex-1 overflow-auto min-h-0">
+            <!-- Edit mode -->
+            <div v-if="editMode && isTextFile" class="h-full border border-[var(--border-color)] rounded-lg overflow-hidden">
+              <MdEditor
+                v-model="editableContent"
+                :language="detectLanguage(fileStore.selectedFile.name)"
+                :dark="isDark"
+                @save="saveEditableContent"
+              />
+            </div>
+            <!-- Preview: Markdown -->
+            <div v-else-if="!editMode && isMarkdownFile" class="prose prose-sm max-w-none">
+              <MdPreview :content="fileStore.fileContent" />
+            </div>
+            <!-- Preview: Plain text -->
             <pre
-              v-if="isTextFile"
+              v-else-if="!editMode && isTextFile"
               class="text-xs font-mono text-[var(--text-primary)] leading-relaxed whitespace-pre-wrap break-all"
             >{{ fileStore.fileContent }}</pre>
             <div v-else class="flex items-center justify-center h-full">
@@ -186,6 +201,12 @@
                 <p class="text-sm">二进制文件，无法预览</p>
               </div>
             </div>
+          </div>
+
+          <!-- Edit status bar -->
+          <div v-if="editMode && isTextFile" class="flex items-center justify-between mt-2 pt-2 border-t border-[var(--border-color)] text-xs text-[var(--text-muted)] shrink-0">
+            <span>{{ fileStore.selectedFile?.name }} · {{ editDirty ? '● 未保存' : '✓ 已保存' }}</span>
+            <button class="text-blue-400 hover:underline" @click="saveEditableContent">保存 (Ctrl+S)</button>
           </div>
         </template>
       </div>
@@ -270,18 +291,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useFilesStore, type CompetitionFileGroup } from '@/stores/files'
 import { useCompetitionsStore } from '@/stores/competitions'
 import { useChallengesStore } from '@/stores/challenges'
+import { useSettingsStore } from '@/stores/settings'
 import FileTree from '@/components/files/FileTree.vue'
+import MdEditor from '@/components/editor/MdEditor.vue'
+import MdPreview from '@/components/editor/MdPreview.vue'
 import type { FileEntry, Challenge } from '@/types'
 
 const router = useRouter()
 const fileStore = useFilesStore()
 const compStore = useCompetitionsStore()
 const chStore = useChallengesStore()
+const settingsStore = useSettingsStore()
+
+const isDark = computed(() => settingsStore.settings.theme === 'dark')
+
+// Edit mode
+const editMode = ref(false)
+const editableContent = ref('')
+const editDirty = ref(false)
 
 // Track which competitions are expanded (all expanded by default)
 const expandedGroups = ref<Set<number>>(new Set())
@@ -308,6 +340,18 @@ const isTextFile = computed(() => {
   const name = fileStore.selectedFile?.name?.toLowerCase() || ''
   return !binaryExtensions.some(ext => name.endsWith(ext))
 })
+
+const isMarkdownFile = computed(() => {
+  const name = fileStore.selectedFile?.name?.toLowerCase() || ''
+  return name.endsWith('.md')
+})
+
+function detectLanguage(fileName: string): 'markdown' | 'python' | 'text' {
+  const ext = fileName.toLowerCase().split('.').pop()
+  if (ext === 'md') return 'markdown'
+  if (ext === 'py') return 'python'
+  return 'text'
+}
 
 function countFiles(entries: FileEntry[]): number {
   let count = 0
@@ -367,9 +411,44 @@ function onFileSelect(entry: FileEntry) {
 
 function onFileDblClick(entry: FileEntry) {
   if (entry.type === 'file') {
-    openInEditor()
+    toggleEditMode()
   }
 }
+
+// ── Inline Edit Mode ──
+
+function toggleEditMode() {
+  if (editMode.value) {
+    editMode.value = false
+  } else {
+    editMode.value = true
+    editableContent.value = fileStore.fileContent
+    editDirty.value = false
+  }
+}
+
+async function saveEditableContent() {
+  if (!fileStore.selectedFile?.path) return
+  try {
+    await window.api.files.writeFile(fileStore.selectedFile.path, editableContent.value)
+    fileStore.fileContent = editableContent.value
+    editDirty.value = false
+  } catch (err) {
+    console.error('Failed to save file:', err)
+  }
+}
+
+// Watch editable content for dirty tracking
+watch(editableContent, (val) => {
+  if (editMode.value) {
+    editDirty.value = val !== fileStore.fileContent
+  }
+})
+
+// Reset edit mode when selecting a new file
+watch(() => fileStore.selectedFile, () => {
+  editMode.value = false
+})
 
 function openInEditor() {
   if (fileStore.selectedFile?.path) {

@@ -11,6 +11,8 @@ import { registerDialogHandlers } from './ipc/dialog'
 import { registerDataHandlers } from './ipc/data'
 import { registerChallengeHandlers } from './ipc/challenges'
 import { registerNotificationHandlers, checkNotifications } from './ipc/notifications'
+import { registerCvesHandlers } from './ipc/cves'
+import { registerDockerHandlers } from './ipc/docker'
 
 const isDev = !app.isPackaged
 
@@ -64,6 +66,8 @@ function registerAllHandlers(): void {
   registerDataHandlers()
   registerChallengeHandlers()
   registerNotificationHandlers()
+  registerCvesHandlers()
+  registerDockerHandlers()
 }
 
 app.whenReady().then(() => {

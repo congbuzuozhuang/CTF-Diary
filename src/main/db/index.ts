@@ -97,6 +97,23 @@ function runMigrations(database: Database.Database): void {
       key   TEXT PRIMARY KEY,
       value TEXT NOT NULL
     );
+
+    -- CVE 复现管理表
+    CREATE TABLE IF NOT EXISTS cves (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      cve_number      TEXT NOT NULL,
+      title           TEXT NOT NULL DEFAULT '',
+      severity        TEXT DEFAULT '',
+      cvss_score      REAL DEFAULT 0,
+      description     TEXT DEFAULT '',
+      status          TEXT DEFAULT 'pending',
+      directory       TEXT DEFAULT '',
+      docker_image    TEXT DEFAULT '',
+      docker_container TEXT DEFAULT '',
+      notes           TEXT DEFAULT '',
+      created_at      TEXT DEFAULT (datetime('now', 'localtime')),
+      updated_at      TEXT DEFAULT (datetime('now', 'localtime'))
+    );
   `)
 
   // Add unique index on ctftime_id for upsert operations (IF NOT EXISTS safe)
