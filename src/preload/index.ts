@@ -121,7 +121,8 @@ const api = {
     removeContainer: (containerId: string) => ipcRenderer.invoke('docker:removeContainer', containerId),
     getContainerStatus: (containerId: string) => ipcRenderer.invoke('docker:getContainerStatus', containerId),
     getContainerLogs: (containerId: string, lines?: number) => ipcRenderer.invoke('docker:getContainerLogs', containerId, lines),
-    linkImageToCve: (cveId: number, imageName: string) => ipcRenderer.invoke('docker:linkImageToCve', cveId, imageName)
+    linkImageToCve: (cveId: number, imageName: string) => ipcRenderer.invoke('docker:linkImageToCve', cveId, imageName),
+    removeImage: (imageName: string, force?: boolean) => ipcRenderer.invoke('docker:removeImage', imageName, force)
   },
 
   // Config

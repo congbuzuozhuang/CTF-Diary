@@ -232,7 +232,10 @@
             </svg>
             <span class="text-sm font-mono text-[var(--text-primary)]">{{ cve.docker_image }}</span>
           </div>
-          <button class="text-xs text-[var(--text-muted)] hover:text-red-400" @click="unlinkImage">取消关联</button>
+          <div class="flex items-center gap-2">
+            <button class="text-xs text-[var(--text-muted)] hover:text-red-400" @click="unlinkImage">取消关联</button>
+            <button class="text-xs text-red-400 hover:underline" @click="removeLinkedImage">删除镜像</button>
+          </div>
         </div>
 
         <div class="flex items-center gap-2 mb-3">
@@ -309,6 +312,11 @@
               class="btn-ghost text-xs text-yellow-400 px-2 py-1"
               @click="stopCurrentContainer"
             >停止容器</button>
+            <button
+              v-if="containerStatus && !containerStatus.running"
+              class="btn-ghost text-xs text-red-400 px-2 py-1"
+              @click="removeCurrentContainer"
+            >删除容器</button>
             <button class="btn-ghost text-xs text-blue-400 px-2 py-1" @click="refreshContainerStatus">刷新状态</button>
             <button class="btn-ghost text-xs text-blue-400 px-2 py-1" @click="showLogs = !showLogs; $refs.logsContainer">{{ showLogs ? '收起日志' : '查看日志' }}</button>
           </div>
@@ -604,6 +612,19 @@ async function handleDelete(): Promise<void> {
   if (!cve.value) return
   deleting.value = true
   try {
+    // Clean up Docker container if exists
+    if (cve.value.docker_container) {
+      try {
+        await dockerStore.stopContainer(cve.value.docker_container)
+        await dockerStore.removeContainer(cve.value.docker_container)
+      } catch { /* container may already be gone */ }
+    }
+    // Clean up Docker image if exists
+    if (cve.value.docker_image) {
+      try {
+        await dockerStore.removeImage(cve.value.docker_image, true)
+      } catch { /* image may already be gone */ }
+    }
     await store.deleteCve(cve.value.id)
     router.push('/cves')
   } finally {
@@ -719,6 +740,35 @@ async function refreshContainerStatus(): Promise<void> {
   containerStatus.value = await dockerStore.checkContainerStatus(cve.value.docker_container)
   if (containerStatus.value?.running) {
     containerLogs.value = await dockerStore.getContainerLogs(cve.value.docker_container, 100)
+  }
+}
+
+async function removeCurrentContainer(): Promise<void> {
+  if (!cve.value?.docker_container) return
+  if (!confirm(`确定要删除容器「${cve.value.docker_container}」吗？`)) return
+  dockerLoading.value = true
+  try {
+    await dockerStore.removeContainer(cve.value.docker_container)
+    await store.update(cve.value.id, { docker_container: '' })
+    containerStatus.value = null
+    containerLogs.value = ''
+  } finally {
+    dockerLoading.value = false
+  }
+}
+
+async function removeLinkedImage(): Promise<void> {
+  if (!cve.value?.docker_image) return
+  if (!confirm(`确定要删除镜像「${cve.value.docker_image}」吗？\n\n如果有容器正在使用该镜像，删除将会失败。`)) return
+  dockerLoading.value = true
+  try {
+    const ok = await dockerStore.removeImage(cve.value.docker_image)
+    if (ok) {
+      await store.update(cve.value.id, { docker_image: '', docker_container: '' })
+      containerStatus.value = null
+    }
+  } finally {
+    dockerLoading.value = false
   }
 }
 

@@ -125,6 +125,10 @@
         <!-- Footer -->
         <div class="flex items-center justify-between text-xs text-[var(--text-muted)]">
           <span>更新于 {{ formatDate(cve.updated_at) }}</span>
+          <button
+            class="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:underline"
+            @click.stop="confirmDelete(cve)"
+          >删除</button>
         </div>
       </div>
     </div>
@@ -236,6 +240,40 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Delete Confirmation Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        @click.self="showDeleteModal = false"
+      >
+        <div class="card w-96 p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+              <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-[var(--text-primary)]">删除 CVE</h3>
+              <p class="text-xs text-[var(--text-muted)]">
+                确定要删除「{{ deleteTarget?.cve_number }}」吗？<br/>
+                这将同时删除所有关联文件和 Docker 容器。
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center justify-end gap-3">
+            <button class="btn-ghost px-4 py-2 text-sm" @click="showDeleteModal = false">取消</button>
+            <button
+              class="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+              :disabled="deleting"
+              @click="handleDelete"
+            >{{ deleting ? '删除中...' : '确认删除' }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -254,6 +292,11 @@ const showCreateModal = ref(false)
 const creating = ref(false)
 const createError = ref('')
 const cveNumberInput = ref<HTMLInputElement | null>(null)
+
+// Delete state
+const showDeleteModal = ref(false)
+const deleteTarget = ref<Cve | null>(null)
+const deleting = ref(false)
 
 // Form
 const defaultForm = () => ({
@@ -341,6 +384,26 @@ async function handleCreate(): Promise<void> {
     createError.value = err.message || '创建失败'
   } finally {
     creating.value = false
+  }
+}
+
+// Delete functions
+function confirmDelete(cve: Cve): void {
+  deleteTarget.value = cve
+  showDeleteModal.value = true
+}
+
+async function handleDelete(): Promise<void> {
+  if (!deleteTarget.value) return
+  deleting.value = true
+  try {
+    await store.deleteCve(deleteTarget.value.id)
+    showDeleteModal.value = false
+    deleteTarget.value = null
+  } catch (err) {
+    console.error('Failed to delete CVE:', err)
+  } finally {
+    deleting.value = false
   }
 }
 

@@ -145,10 +145,24 @@ export const useDockerStore = defineStore('docker', () => {
     }
   }
 
+  async function removeImage(imageName: string, force?: boolean): Promise<boolean> {
+    try {
+      const result = await window.api.docker.removeImage(imageName, force)
+      if (result && (result as any).success) {
+        await loadImages() // Refresh image list
+        return true
+      }
+      return false
+    } catch (err) {
+      console.error('Failed to remove Docker image:', err)
+      return false
+    }
+  }
+
   return {
     available, dockerVersion, images, loading, containerStatuses,
     checkDocker, loadImages, importImage, runContainer, runTempContainer,
-    stopContainer, removeContainer, checkContainerStatus, getContainerLogs,
+    stopContainer, removeContainer, removeImage, checkContainerStatus, getContainerLogs,
     linkImageToCve
   }
 })

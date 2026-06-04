@@ -221,6 +221,19 @@ export function registerDockerHandlers(): void {
     }
   })
 
+  // Remove a Docker image
+  ipcMain.handle('docker:removeImage', (_event, imageName: string, force: boolean = false) => {
+    try {
+      const args = ['rmi']
+      if (force) args.push('-f')
+      args.push(imageName)
+      docker(args)
+      return { success: true }
+    } catch (err: any) {
+      return { success: false, error: err.message }
+    }
+  })
+
   // Link a Docker image to a CVE
   ipcMain.handle('docker:linkImageToCve', (_event, cveId: number, imageName: string) => {
     try {
