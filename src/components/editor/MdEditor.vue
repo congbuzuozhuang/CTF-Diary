@@ -20,6 +20,7 @@ const props = defineProps<{
   language?: 'markdown' | 'python' | 'text'
   readonly?: boolean
   dark?: boolean
+  fontSize?: number
 }>()
 
 const emit = defineEmits<{
@@ -53,7 +54,7 @@ function buildExtensions(dark: boolean) {
 
   const themeExtension = dark ? darkThemeExtension : lightThemeExtension
 
-  return [
+  const extensions: any[] = [
     langExtension,
     Prec.highest(wysiwygPlugin),
     history(),
@@ -83,6 +84,14 @@ function buildExtensions(dark: boolean) {
     EditorState.readOnly.of(props.readonly || false),
     EditorView.lineWrapping
   ]
+
+  if (props.fontSize) {
+    extensions.push(EditorView.theme({
+      '&': { fontSize: `${props.fontSize}px` }
+    }))
+  }
+
+  return extensions
 }
 
 function createEditor() {
@@ -136,7 +145,6 @@ watch(() => props.dark, () => {
 }
 .md-editor .cm-editor {
   height: 100%;
-  font-size: 14px;
   border-radius: 8px;
 }
 .md-editor .cm-editor .cm-scroller {

@@ -77,6 +77,7 @@ function clearAll(): { success: boolean } {
 
   db.exec(`
     DELETE FROM file_tags;
+    DELETE FROM cves;
     DELETE FROM competitions;
     DELETE FROM checkins;
     DELETE FROM settings;

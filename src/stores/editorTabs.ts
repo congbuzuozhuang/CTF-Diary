@@ -103,11 +103,17 @@ export const useEditorTabsStore = defineStore('editorTabs', () => {
     }
   }
 
-  /** Close a tab */
-  function closeTab(tabId: string) {
-    const idx = tabs.value.findIndex(t => t.id === tabId)
-    if (idx < 0) return
+  /** Close a tab. Returns false if closing was cancelled due to unsaved changes. */
+  function closeTab(tabId: string): boolean {
+    const tab = tabs.value.find(t => t.id === tabId)
+    if (!tab) return false
 
+    if (tab.dirty) {
+      const discard = window.confirm(`「${tab.name}」有未保存的更改，确定关闭吗？`)
+      if (!discard) return false
+    }
+
+    const idx = tabs.value.findIndex(t => t.id === tabId)
     tabs.value.splice(idx, 1)
 
     // Switch to neighbor tab

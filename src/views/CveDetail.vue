@@ -318,7 +318,7 @@
               @click="removeCurrentContainer"
             >删除容器</button>
             <button class="btn-ghost text-xs text-blue-400 px-2 py-1" @click="refreshContainerStatus">刷新状态</button>
-            <button class="btn-ghost text-xs text-blue-400 px-2 py-1" @click="showLogs = !showLogs; $refs.logsContainer">{{ showLogs ? '收起日志' : '查看日志' }}</button>
+            <button class="btn-ghost text-xs text-blue-400 px-2 py-1" @click="showLogs = !showLogs">{{ showLogs ? '收起日志' : '查看日志' }}</button>
           </div>
         </div>
 
@@ -356,6 +356,23 @@
               :disabled="deleting"
               @click="handleDelete"
             >{{ deleting ? '删除中...' : '确认删除' }}</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Confirm Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showConfirmModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        @click.self="showConfirmModal = false"
+      >
+        <div class="card w-96 p-6">
+          <p class="text-sm text-[var(--text-primary)] mb-6">{{ confirmMessage }}</p>
+          <div class="flex items-center justify-end gap-3">
+            <button class="btn-ghost px-4 py-2 text-sm" @click="showConfirmModal = false">取消</button>
+            <button class="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600" @click="handleConfirm">确认</button>
           </div>
         </div>
       </div>
@@ -433,6 +450,23 @@ const envVars = ref('')
 // Delete modal state
 const showDeleteModal = ref(false)
 const deleting = ref(false)
+
+// Generic confirm dialog
+const showConfirmModal = ref(false)
+const confirmMessage = ref('')
+let confirmCallback: (() => void) | null = null
+
+function requestConfirm(message: string, onConfirm: () => void) {
+  confirmMessage.value = message
+  confirmCallback = onConfirm
+  showConfirmModal.value = true
+}
+
+function handleConfirm() {
+  showConfirmModal.value = false
+  confirmCallback?.()
+  confirmCallback = null
+}
 
 // Computed
 const selectedFileName = computed(() => {
@@ -745,21 +779,22 @@ async function refreshContainerStatus(): Promise<void> {
 
 async function removeCurrentContainer(): Promise<void> {
   if (!cve.value?.docker_container) return
-  if (!confirm(`确定要删除容器「${cve.value.docker_container}」吗？`)) return
-  dockerLoading.value = true
-  try {
-    await dockerStore.removeContainer(cve.value.docker_container)
-    await store.update(cve.value.id, { docker_container: '' })
-    containerStatus.value = null
-    containerLogs.value = ''
-  } finally {
-    dockerLoading.value = false
-  }
+  requestConfirm(`确定要删除容器「${cve.value.docker_container}」吗？`, async () => {
+    dockerLoading.value = true
+    try {
+      await dockerStore.removeContainer(cve.value.docker_container)
+      await store.update(cve.value.id, { docker_container: '' })
+      containerStatus.value = null
+      containerLogs.value = ''
+    } finally {
+      dockerLoading.value = false
+    }
+  })
 }
 
 async function removeLinkedImage(): Promise<void> {
   if (!cve.value?.docker_image) return
-  if (!confirm(`确定要删除镜像「${cve.value.docker_image}」吗？\n\n如果有容器正在使用该镜像，删除将会失败。`)) return
+  requestConfirm(`确定要删除镜像「${cve.value.docker_image}」吗？\n\n如果有容器正在使用该镜像，删除将会失败。`, async () => {
   dockerLoading.value = true
   try {
     const ok = await dockerStore.removeImage(cve.value.docker_image)
@@ -770,7 +805,10 @@ async function removeLinkedImage(): Promise<void> {
   } finally {
     dockerLoading.value = false
   }
+  })
 }
+
+// ── Lifecycle ──
 
 // ── Lifecycle ──
 

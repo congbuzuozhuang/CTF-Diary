@@ -508,7 +508,18 @@ async function onDropToGroup(e: DragEvent, group: CompetitionFileGroup) {
 
 function copyFilePath() {
   if (fileStore.selectedFile?.path) {
-    navigator.clipboard.writeText(fileStore.selectedFile.path)
+    try {
+      navigator.clipboard.writeText(fileStore.selectedFile.path)
+    } catch {
+      // Fallback: electron clipboard via textarea
+      const ta = document.createElement('textarea')
+      ta.value = fileStore.selectedFile.path
+      ta.style.cssText = 'position:fixed;left:-9999px'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
   }
 }
 

@@ -197,6 +197,7 @@
               :model-value="tabStore.activeTab.content"
               :language="tabStore.activeTab.language"
               :dark="isDark"
+              :font-size="Number(settingsStore.settings.font_size)"
               @update:model-value="onContentChange"
               @save="handleSave"
               @cursor="onCursorMove"
