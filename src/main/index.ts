@@ -13,6 +13,7 @@ import { registerChallengeHandlers } from './ipc/challenges'
 import { registerNotificationHandlers, checkNotifications } from './ipc/notifications'
 import { registerCvesHandlers } from './ipc/cves'
 import { registerDockerHandlers } from './ipc/docker'
+import { registerBackupHandlers } from './ipc/backup'
 
 const isDev = !app.isPackaged
 
@@ -68,6 +69,7 @@ function registerAllHandlers(): void {
   registerNotificationHandlers()
   registerCvesHandlers()
   registerDockerHandlers()
+  registerBackupHandlers()
 }
 
 app.whenReady().then(() => {

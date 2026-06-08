@@ -381,6 +381,17 @@
       </div>
     </section>
 
+    <!-- Backup & Restore -->
+    <section class="card space-y-4">
+      <h3 class="font-semibold text-sm">数据备份</h3>
+      <p class="text-xs text-[var(--text-muted)]">导出所有数据（数据库 + 比赛文件）为 ZIP 压缩包，或从备份恢复。</p>
+      <div class="flex gap-3">
+        <button class="btn-ghost px-4 py-2 text-sm" @click="handleExport">导出备份</button>
+        <button class="btn-ghost px-4 py-2 text-sm text-red-400" @click="handleImport">导入备份</button>
+      </div>
+      <p v-if="backupMsg" class="text-xs" :class="backupOk ? 'text-green-400' : 'text-red-400'">{{ backupMsg }}</p>
+    </section>
+
     <!-- About -->
     <section class="card">
       <div class="text-center text-xs text-[var(--text-muted)] space-y-1">
@@ -398,6 +409,49 @@ import { formatSize } from '@/utils/formatters'
 import { version } from '../../package.json'
 
 const appVersion = version
+
+// Backup state
+const backupMsg = ref('')
+const backupOk = ref(false)
+
+async function handleExport() {
+  backupMsg.value = '正在导出...'
+  try {
+    const result = await window.api.backup.export_()
+    if (result.cancelled) {
+      backupMsg.value = ''
+    } else if (result.success) {
+      backupMsg.value = `备份已保存到: ${result.path}`
+      backupOk.value = true
+    } else {
+      backupMsg.value = `导出失败: ${result.error}`
+      backupOk.value = false
+    }
+  } catch (err: any) {
+    backupMsg.value = `导出失败: ${err.message}`
+    backupOk.value = false
+  }
+}
+
+async function handleImport() {
+  if (!confirm('导入备份将覆盖当前所有数据（数据库 + 比赛文件），确定继续吗？')) return
+  backupMsg.value = '正在导入...'
+  try {
+    const result = await window.api.backup.import_()
+    if (result.cancelled) {
+      backupMsg.value = ''
+    } else if (result.success) {
+      backupMsg.value = '导入成功！请重启应用以加载恢复的数据。'
+      backupOk.value = true
+    } else {
+      backupMsg.value = `导入失败: ${result.error}`
+      backupOk.value = false
+    }
+  } catch (err: any) {
+    backupMsg.value = `导入失败: ${err.message}`
+    backupOk.value = false
+  }
+}
 const settingsStore = useSettingsStore()
 
 interface DataStats {

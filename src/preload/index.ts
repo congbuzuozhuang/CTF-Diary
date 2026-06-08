@@ -137,6 +137,12 @@ const api = {
   export_: {
     competition: (compId: number, compName: string, asZip: boolean) => ipcRenderer.invoke('export:competition', compId, compName, asZip),
     challenge: (challengeDir: string, challengeName: string, asZip: boolean) => ipcRenderer.invoke('export:challenge', challengeDir, challengeName, asZip)
+  },
+
+  // Backup / Restore
+  backup: {
+    export_: () => ipcRenderer.invoke('backup:export'),
+    import_: () => ipcRenderer.invoke('backup:import')
   }
 }
 
