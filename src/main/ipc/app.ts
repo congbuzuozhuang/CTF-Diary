@@ -1,11 +1,21 @@
 import { ipcMain, app, shell, BrowserWindow } from 'electron'
 
+const ALLOWED_PROTOCOLS = ['http:', 'https:']
+
 export function registerAppHandlers(): void {
   ipcMain.handle('app:getVersion', () => {
     return app.getVersion()
   })
 
   ipcMain.handle('app:openExternal', (_event, url: string) => {
+    try {
+      const parsed = new URL(url)
+      if (!ALLOWED_PROTOCOLS.includes(parsed.protocol)) {
+        return false
+      }
+    } catch {
+      return false
+    }
     return shell.openExternal(url)
   })
 

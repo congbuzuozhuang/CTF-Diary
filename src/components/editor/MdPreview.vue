@@ -12,7 +12,7 @@ const props = defineProps<{
 }>()
 
 const md = new MarkdownIt({
-  html: true,
+  html: false,
   linkify: true,
   typographer: true,
   breaks: true,

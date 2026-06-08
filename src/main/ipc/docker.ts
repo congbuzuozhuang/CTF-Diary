@@ -1,16 +1,20 @@
 import { ipcMain } from 'electron'
-import { execSync, spawn } from 'child_process'
+import { spawnSync, spawn } from 'child_process'
 import { getDatabase } from '../db'
 
 /**
- * Run a Docker CLI command and return the stdout as string.
+ * Run a Docker CLI command synchronously and return the stdout as string.
+ * Uses spawnSync with array args to prevent shell injection.
  */
 function docker(args: string[]): string {
-  return execSync(`docker ${args.join(' ')}`, {
+  const result = spawnSync('docker', args, {
     encoding: 'utf-8',
-    timeout: 120000, // 2 minutes max for image operations
+    timeout: 120000,
     windowsHide: true
-  }).trim()
+  })
+  if (result.error) throw result.error
+  if (result.status !== 0) throw new Error(result.stderr?.trim() || `Docker exit ${result.status}`)
+  return result.stdout.trim()
 }
 
 /**
