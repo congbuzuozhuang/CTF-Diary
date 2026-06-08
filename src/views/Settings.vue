@@ -384,7 +384,7 @@
     <!-- About -->
     <section class="card">
       <div class="text-center text-xs text-[var(--text-muted)] space-y-1">
-        <p>CTF Diary v1.5.0</p>
+        <p>CTF Diary v{{ appVersion }}</p>
         <p>Built with Electron + Vue 3 + Tailwind CSS</p>
       </div>
     </section>
@@ -394,7 +394,9 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
+import { version } from '../../package.json'
 
+const appVersion = version
 const settingsStore = useSettingsStore()
 
 interface DataStats {
