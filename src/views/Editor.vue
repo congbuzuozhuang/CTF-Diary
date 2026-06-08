@@ -318,6 +318,22 @@ onMounted(async () => {
   await settingsStore.load()
   await loadSidebar()
 
+  // Global keyboard shortcuts
+  const onKeyDown = (e: KeyboardEvent) => {
+    if (e.ctrlKey && e.key === 'n') {
+      e.preventDefault()
+      tabStore.newTab('markdown')
+    }
+    if (e.ctrlKey && e.key === 'w') {
+      e.preventDefault()
+      if (tabStore.activeTabId) {
+        tabStore.closeTab(tabStore.activeTabId)
+      }
+    }
+  }
+  window.addEventListener('keydown', onKeyDown)
+  ;(window as any).__editorKeydownCleanup = () => window.removeEventListener('keydown', onKeyDown)
+
   // Open file from route params if any
   const type = route.params.type as string
   const id = route.params.id as string | undefined

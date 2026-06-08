@@ -3,6 +3,7 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
+    // ... routes (same as before)
     {
       path: '/',
       name: 'dashboard',
@@ -58,6 +59,21 @@ const router = createRouter({
       meta: { title: '设置', icon: 'settings' }
     }
   ]
+})
+
+// Unsaved tabs guard
+router.beforeEach((to, from) => {
+  // Only guard when navigating away from editor
+  if (from.name === 'editor' && to.name !== 'editor') {
+    try {
+      const { useEditorTabsStore } = require('@/stores/editorTabs')
+      const store = useEditorTabsStore()
+      if (store.hasUnsaved()) {
+        return window.confirm('有未保存的编辑器标签页，确定离开吗？')
+      }
+    } catch { /* store not available yet, allow navigation */ }
+  }
+  return true
 })
 
 export default router
