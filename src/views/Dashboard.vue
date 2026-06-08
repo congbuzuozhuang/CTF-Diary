@@ -69,6 +69,31 @@
       </div>
     </div>
 
+    <!-- Challenge stats by category -->
+    <div v-if="Object.keys(challengeStats).length > 0" class="card">
+      <h3 class="font-semibold mb-3">挑战统计</h3>
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+        <div
+          v-for="catOrder in CATEGORY_ORDER"
+          :key="catOrder"
+          v-show="challengeStats[catOrder]"
+          class="flex flex-col items-center p-3 rounded-lg bg-[var(--bg-tertiary)]"
+        >
+          <span class="text-xs text-[var(--text-muted)] mb-1">{{ catOrder }}</span>
+          <div class="w-full bg-[var(--bg-primary)] rounded-full h-2 mb-1 overflow-hidden">
+            <div
+              class="h-full rounded-full transition-all"
+              :class="catColor(catOrder)"
+              :style="{ width: challengeStats[catOrder].total > 0 ? (challengeStats[catOrder].solved / challengeStats[catOrder].total * 100) + '%' : '0%' }"
+            ></div>
+          </div>
+          <span class="text-lg font-bold text-[var(--text-primary)]">
+            {{ challengeStats[catOrder].solved }}/{{ challengeStats[catOrder].total }}
+          </span>
+        </div>
+      </div>
+    </div>
+
     <!-- Quick checkin -->
     <div class="card">
       <div class="flex items-center justify-between">
@@ -201,6 +226,17 @@ const today = new Date().toLocaleDateString('zh-CN', {
 })
 
 const checkedIn = ref(false)
+const challengeStats = ref<Record<string, { total: number; solved: number }>>({})
+
+const CATEGORY_ORDER = ['pwn', 're', 'web', 'crypto', 'misc']
+
+function catColor(cat: string): string {
+  const map: Record<string, string> = {
+    pwn: 'bg-red-400', re: 'bg-purple-400', web: 'bg-blue-400',
+    crypto: 'bg-amber-400', misc: 'bg-green-400'
+  }
+  return map[cat] || 'bg-gray-400'
+}
 
 const sortedUpcoming = computed(() =>
   [...compStore.upcoming].sort((a, b) => {
@@ -223,13 +259,13 @@ function getGreeting(): string {
 }
 
 onMounted(async () => {
-  // Load diary stats
   await diaryStore.loadStats()
-
-  // Load competitions
   await compStore.loadList()
 
-  // Check today's checkin
+  try {
+    challengeStats.value = await window.api.challenges.getStats()
+  } catch { /* challenges might not exist yet */ }
+
   const todayStr = new Date().toISOString().split('T')[0]
   checkedIn.value = diaryStore.checkinDates.has(todayStr)
 })

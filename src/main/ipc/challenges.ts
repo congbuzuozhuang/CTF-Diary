@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { getDatabase } from '../db'
-import { mkdirSync, existsSync, rmSync } from 'fs'
+import { mkdirSync, existsSync, rmSync, renameSync } from 'fs'
 import { join } from 'path'
 
 function getChallengeDir(compDir: string, category: string, name: string): string {
@@ -75,7 +75,6 @@ export function registerChallengeHandlers(): void {
           }
           // Move directory
           try {
-            const { renameSync } = require('fs')
             renameSync(oldPath, newPath)
           } catch { /* best effort */ }
         }
@@ -118,5 +117,24 @@ export function registerChallengeHandlers(): void {
 
     db.prepare('UPDATE competitions SET solved = ? WHERE id = ?').run(allSolved, compId)
     return { total, solved, allSolved: !!allSolved }
+  })
+
+  // Get aggregated challenge stats by category
+  ipcMain.handle('challenges:stats', () => {
+    const db = getDatabase()
+    const rows = db.prepare(`
+      SELECT category, status, COUNT(*) as count
+      FROM challenges
+      GROUP BY category, status
+      ORDER BY category
+    `).all() as { category: string; status: string; count: number }[]
+
+    const stats: Record<string, { total: number; solved: number }> = {}
+    for (const row of rows) {
+      if (!stats[row.category]) stats[row.category] = { total: 0, solved: 0 }
+      stats[row.category].total += row.count
+      if (row.status === 'solved') stats[row.category].solved += row.count
+    }
+    return stats
   })
 }

@@ -66,7 +66,8 @@ const api = {
     update: (id: number, fields: { name?: string; category?: string; notes?: string }) =>
       ipcRenderer.invoke('challenges:update', id, fields),
     delete: (id: number, keepFiles?: boolean) => ipcRenderer.invoke('challenges:delete', id, keepFiles),
-    updateCompSolved: (compId: number) => ipcRenderer.invoke('challenges:updateCompSolved', compId)
+    updateCompSolved: (compId: number) => ipcRenderer.invoke('challenges:updateCompSolved', compId),
+    getStats: () => ipcRenderer.invoke('challenges:stats')
   },
 
   // Dialog

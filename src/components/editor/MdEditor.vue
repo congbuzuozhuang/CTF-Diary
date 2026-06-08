@@ -1,5 +1,16 @@
 <template>
-  <div ref="editorRef" class="md-editor h-full"></div>
+  <div class="md-editor-wrapper">
+    <!-- Quick insert toolbar (Markdown only) -->
+    <div v-if="language === 'markdown' && !readonly" class="md-toolbar">
+      <button v-for="btn in toolbarButtons" :key="btn.label"
+        class="md-toolbar-btn"
+        :title="btn.label + (btn.key ? ` (${btn.key})` : '')"
+        @click="insertMarkup(btn)">
+        <span v-html="btn.icon"></span>
+      </button>
+    </div>
+    <div ref="editorRef" class="md-editor h-full"></div>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -14,6 +25,26 @@ import { closeBrackets, autocompletion } from '@codemirror/autocomplete'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { lightThemeExtension, darkThemeExtension } from './cmTheme'
 import { wysiwygPlugin } from './wysiwygPlugin'
+
+interface ToolbarButton {
+  label: string
+  key?: string
+  icon: string
+  before: string
+  after: string
+  block?: boolean
+}
+
+const toolbarButtons: ToolbarButton[] = [
+  { label: '粗体', key: 'Ctrl+B', icon: '<b>B</b>', before: '**', after: '**' },
+  { label: '斜体', key: 'Ctrl+I', icon: '<i>I</i>', before: '*', after: '*' },
+  { label: '删除线', icon: '<s>S</s>', before: '~~', after: '~~' },
+  { label: '行内代码', icon: '&lt;/&gt;', before: '`', after: '`' },
+  { label: '代码块', icon: '{}', before: '\n```\n', after: '\n```\n', block: true },
+  { label: '引用', icon: '&gt;', before: '> ', after: '', block: true },
+  { label: '链接', icon: '🔗', before: '[', after: '](url)' },
+  { label: '图片', icon: '🖼', before: '![', after: '](url)' },
+]
 
 const props = defineProps<{
   modelValue: string
@@ -31,6 +62,48 @@ const emit = defineEmits<{
 
 const editorRef = ref<HTMLElement>()
 let view: EditorView | null = null
+
+// ── Toolbar actions ──
+
+function insertMarkup(btn: ToolbarButton) {
+  if (!view) return
+  const sel = view.state.selection.main
+
+  if (btn.block) {
+    // Block-level: insert at line start / around selected lines
+    const fromLine = view.state.doc.lineAt(sel.from)
+    const toLine = view.state.doc.lineAt(sel.to)
+    view.dispatch({
+      changes: [
+        { from: fromLine.from, insert: btn.before },
+        { from: toLine.to, insert: btn.after }
+      ],
+      selection: { anchor: fromLine.from + btn.before.length, head: toLine.to + btn.before.length }
+    })
+  } else {
+    // Inline: wrap selection or insert at cursor
+    const selected = view.state.sliceDoc(sel.from, sel.to)
+    if (sel.from !== sel.to) {
+      view.dispatch({
+        changes: [
+          { from: sel.from, to: sel.from, insert: btn.before },
+          { from: sel.to + btn.before.length, to: sel.to + btn.before.length, insert: btn.after }
+        ],
+        selection: { anchor: sel.from + btn.before.length, head: sel.to + btn.before.length + selected.length }
+      })
+    } else {
+      // No selection: insert markup at cursor with placeholder
+      const placeholder = btn.before === '[' ? 'text' : btn.before === '![' ? 'alt' : '文本'
+      view.dispatch({
+        changes: { from: sel.from, insert: `${btn.before}${placeholder}${btn.after}` },
+        selection: { anchor: sel.from + btn.before.length, head: sel.from + btn.before.length + placeholder.length }
+      })
+    }
+  }
+  view.focus()
+}
+
+// ── Editor setup ──
 
 function createUpdateListener() {
   return EditorView.updateListener.of((update) => {
@@ -71,13 +144,7 @@ function buildExtensions(dark: boolean) {
       ...historyKeymap,
       ...searchKeymap,
       indentWithTab,
-      {
-        key: 'Ctrl-s',
-        run: () => {
-          emit('save')
-          return true
-        }
-      }
+      { key: 'Ctrl-s', run: () => { emit('save'); return true } }
     ]),
     themeExtension,
     createUpdateListener(),
@@ -105,29 +172,17 @@ function createEditor() {
   })
 }
 
-onMounted(() => {
-  createEditor()
-})
+onMounted(() => { createEditor() })
+onBeforeUnmount(() => { view?.destroy(); view = null })
 
-onBeforeUnmount(() => {
-  view?.destroy()
-  view = null
-})
-
-// Sync external content changes
 watch(() => props.modelValue, (newVal) => {
   if (view && newVal !== view.state.doc.toString()) {
     view.dispatch({
-      changes: {
-        from: 0,
-        to: view.state.doc.length,
-        insert: newVal
-      }
+      changes: { from: 0, to: view.state.doc.length, insert: newVal }
     })
   }
 })
 
-// Rebuild editor when theme changes (preserves document content)
 watch(() => props.dark, () => {
   if (!view) return
   view.destroy()
@@ -136,6 +191,40 @@ watch(() => props.dark, () => {
 </script>
 
 <style>
+.md-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.md-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+.md-toolbar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+.md-toolbar-btn:hover {
+  background: var(--btn-ghost-hover-bg);
+  color: var(--text-primary);
+}
 .md-editor {
   height: 100%;
   overflow: auto;
