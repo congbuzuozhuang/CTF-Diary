@@ -394,6 +394,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted } from 'vue'
 import { useSettingsStore } from '@/stores/settings'
+import { formatSize } from '@/utils/formatters'
 import { version } from '../../package.json'
 
 const appVersion = version
@@ -484,12 +485,6 @@ async function executeCleanup() {
   } finally {
     cleaning.value = false
   }
-}
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
 }
 
 // Custom backgrounds (file:// URLs) tracked separately

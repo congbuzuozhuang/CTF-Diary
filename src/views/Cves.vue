@@ -124,7 +124,7 @@
 
         <!-- Footer -->
         <div class="flex items-center justify-between text-xs text-[var(--text-muted)]">
-          <span>更新于 {{ formatDate(cve.updated_at) }}</span>
+          <span>更新于 {{ formatDateRelative(cve.updated_at) }}</span>
           <button
             class="opacity-0 group-hover:opacity-100 transition-opacity text-red-400 hover:underline"
             @click.stop="confirmDelete(cve)"
@@ -281,6 +281,7 @@
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCvesStore } from '@/stores/cves'
+import { formatDateRelative } from '@/utils/formatters'
 import type { Cve } from '@/types'
 
 const router = useRouter()
@@ -332,19 +333,6 @@ const filteredCves = computed(() => {
     c.title.toLowerCase().includes(q)
   )
 })
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - d.getTime()
-  const days = Math.floor(diff / 86400000)
-
-  if (days === 0) return '今天'
-  if (days === 1) return '昨天'
-  if (days < 7) return `${days} 天前`
-  return d.toLocaleDateString('zh-CN')
-}
 
 function openDetail(id: number): void {
   router.push(`/cves/${id}`)

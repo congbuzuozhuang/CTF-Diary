@@ -395,6 +395,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useCvesStore } from '@/stores/cves'
 import { useDockerStore } from '@/stores/docker'
 import { useSettingsStore } from '@/stores/settings'
+import { detectLanguage } from '@/utils/formatters'
 import MdEditor from '@/components/editor/MdEditor.vue'
 import MdPreview from '@/components/editor/MdPreview.vue'
 import FileTree from '@/components/files/FileTree.vue'
@@ -501,13 +502,6 @@ function formatDate(dateStr: string): string {
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit'
   })
-}
-
-function detectLanguage(filePath: string): 'markdown' | 'python' | 'text' {
-  const ext = filePath.toLowerCase().split('.').pop()
-  if (ext === 'md') return 'markdown'
-  if (ext === 'py') return 'python'
-  return 'text'
 }
 
 function goBack(): void {

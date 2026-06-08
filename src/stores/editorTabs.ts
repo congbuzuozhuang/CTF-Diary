@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { detectLanguage } from '@/utils/formatters'
 
 export interface EditorTab {
   id: string          // unique tab id
@@ -137,19 +138,6 @@ export const useEditorTabsStore = defineStore('editorTabs', () => {
       tab.language = detectLanguage(newPath)
       tab.id = tabIdFor(newPath)
     }
-  }
-
-  function detectLanguage(path: string): 'markdown' | 'python' | 'text' {
-    const ext = path.split('.').pop()?.toLowerCase()
-    if (ext === 'py') return 'python'
-    if (ext === 'md' || ext === 'markdown') return 'markdown'
-    // Check other text extensions
-    if (['txt', 'c', 'cpp', 'h', 'hpp', 'js', 'ts', 'json', 'xml', 'html', 'css',
-         'yaml', 'yml', 'toml', 'sh', 'bash', 'ps1', 'asm', 's', 'java', 'go',
-         'rs', 'rb', 'php', 'pl', 'r', 'lua', 'sql'].includes(ext || '')) {
-      return 'text'
-    }
-    return 'text'
   }
 
   function hasUnsaved(): boolean {

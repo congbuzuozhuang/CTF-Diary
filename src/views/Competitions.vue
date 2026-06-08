@@ -117,11 +117,11 @@
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                 </svg>
-                {{ formatDate(comp.start_date) }}
+                {{ formatDateTime(comp.start_date) }}
               </span>
               <span v-if="comp.end_date" class="text-[var(--text-muted)]">→</span>
               <span v-if="comp.end_date" class="flex items-center gap-1">
-                {{ formatDate(comp.end_date) }}
+                {{ formatDateTime(comp.end_date) }}
               </span>
             </div>
 
@@ -376,6 +376,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCompetitionsStore } from '@/stores/competitions'
 import { useChallengesStore } from '@/stores/challenges'
+import { formatDateTime, getDuration, statusBadgeClass, statusLabel } from '@/utils/formatters'
 import type { Competition } from '@/types'
 
 const store = useCompetitionsStore()
@@ -589,29 +590,6 @@ async function handleParticipate(comp: Competition) {
   await store.participate(comp.id)
 }
 
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('zh-CN', {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  })
-}
-
-function getDuration(startStr: string, endStr: string): string {
-  if (!startStr || !endStr) return ''
-  const start = new Date(startStr)
-  const end = new Date(endStr)
-  const diffMs = end.getTime() - start.getTime()
-  const hours = Math.round(diffMs / 3600000)
-  if (hours < 24) return `${hours} 小时`
-  const days = Math.floor(hours / 24)
-  const remainHours = hours % 24
-  return remainHours > 0 ? `${days} 天 ${remainHours} 小时` : `${days} 天`
-}
-
 function formatBadgeClass(format: string): string {
   const map: Record<string, string> = {
     'Jeopardy': 'bg-green-500/15 text-green-400',
@@ -619,25 +597,5 @@ function formatBadgeClass(format: string): string {
     'Mixed': 'bg-purple-500/15 text-purple-400'
   }
   return map[format] || 'bg-gray-500/15 text-gray-400'
-}
-
-function statusBadgeClass(status: string): string {
-  const map: Record<string, string> = {
-    'upcoming': 'bg-blue-500/15 text-blue-400',
-    'running': 'bg-green-500/15 text-green-400',
-    'participating': 'bg-purple-500/15 text-purple-400',
-    'finished': 'bg-gray-500/15 text-gray-400'
-  }
-  return map[status] || 'bg-gray-500/15 text-gray-400'
-}
-
-function statusLabel(status: string): string {
-  const map: Record<string, string> = {
-    'upcoming': '即将开始',
-    'running': '进行中',
-    'participating': '已参加',
-    'finished': '已结束'
-  }
-  return map[status] || status
 }
 </script>

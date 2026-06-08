@@ -188,6 +188,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useDiaryStore } from '@/stores/diary'
 import { useCompetitionsStore } from '@/stores/competitions'
+import { formatDate } from '@/utils/formatters'
 
 const diaryStore = useDiaryStore()
 const compStore = useCompetitionsStore()
@@ -242,11 +243,5 @@ async function handleCheckin() {
 
 async function handleParticipate(id: number) {
   await compStore.participate(id)
-}
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
 }
 </script>

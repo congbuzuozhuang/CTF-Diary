@@ -80,7 +80,7 @@
         </div>
         <div>
           <span class="text-[var(--text-muted)]">状态：</span>
-          <span :class="statusBadgeClass(competition.status)">
+          <span class="px-2 py-0.5 rounded text-xs font-medium" :class="statusBadgeClass(competition.status)">
             {{ statusLabel(competition.status) }}
           </span>
         </div>
@@ -450,6 +450,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCompetitionsStore } from '@/stores/competitions'
 import { useChallengesStore } from '@/stores/challenges'
+import { getDuration, formatSize, statusBadgeClass, statusLabel } from '@/utils/formatters'
 import type { Competition, FileEntry, Challenge } from '@/types'
 
 const route = useRoute()
@@ -670,44 +671,5 @@ function formatFullDate(dateStr: string): string {
     hour: '2-digit',
     minute: '2-digit'
   })
-}
-
-function getDuration(startStr: string, endStr: string): string {
-  if (!startStr || !endStr) return '—'
-  const start = new Date(startStr)
-  const end = new Date(endStr)
-  const diffMs = end.getTime() - start.getTime()
-  const hours = Math.round(diffMs / 3600000)
-  if (hours < 24) return `${hours} 小时`
-  const days = Math.floor(hours / 24)
-  const remainHours = hours % 24
-  return remainHours > 0 ? `${days} 天 ${remainHours} 小时` : `${days} 天`
-}
-
-function formatSize(bytes?: number): string {
-  if (!bytes) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1048576).toFixed(1)} MB`
-}
-
-function statusBadgeClass(status: string): string {
-  const map: Record<string, string> = {
-    'upcoming': 'px-2 py-0.5 rounded text-xs font-medium bg-blue-500/15 text-blue-400',
-    'running': 'px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400',
-    'participating': 'px-2 py-0.5 rounded text-xs font-medium bg-purple-500/15 text-purple-400',
-    'finished': 'px-2 py-0.5 rounded text-xs font-medium bg-gray-500/15 text-gray-400'
-  }
-  return map[status] || 'px-2 py-0.5 rounded text-xs font-medium bg-gray-500/15 text-gray-400'
-}
-
-function statusLabel(status: string): string {
-  const map: Record<string, string> = {
-    'upcoming': '即将开始',
-    'running': '进行中',
-    'participating': '已参加',
-    'finished': '已结束'
-  }
-  return map[status] || status
 }
 </script>

@@ -297,6 +297,7 @@ import { useFilesStore, type CompetitionFileGroup } from '@/stores/files'
 import { useCompetitionsStore } from '@/stores/competitions'
 import { useChallengesStore } from '@/stores/challenges'
 import { useSettingsStore } from '@/stores/settings'
+import { formatSize, detectLanguage } from '@/utils/formatters'
 import FileTree from '@/components/files/FileTree.vue'
 import MdEditor from '@/components/editor/MdEditor.vue'
 import MdPreview from '@/components/editor/MdPreview.vue'
@@ -345,13 +346,6 @@ const isMarkdownFile = computed(() => {
   const name = fileStore.selectedFile?.name?.toLowerCase() || ''
   return name.endsWith('.md')
 })
-
-function detectLanguage(fileName: string): 'markdown' | 'python' | 'text' {
-  const ext = fileName.toLowerCase().split('.').pop()
-  if (ext === 'md') return 'markdown'
-  if (ext === 'py') return 'python'
-  return 'text'
-}
 
 function countFiles(entries: FileEntry[]): number {
   let count = 0
@@ -607,12 +601,5 @@ async function executeDelete() {
     deleting.value = false
     deleteConfirm.value = null
   }
-}
-
-function formatSize(bytes?: number): string {
-  if (!bytes) return ''
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1048576).toFixed(1)} MB`
 }
 </script>
