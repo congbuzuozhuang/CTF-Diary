@@ -73,6 +73,7 @@ const lightTheme = EditorView.theme(
 )
 
 const lightHighlight = HighlightStyle.define([
+  // ── Programming tokens ──
   { tag: tags.keyword, color: '#7c3aed', fontWeight: '600' },
   { tag: tags.comment, color: '#6b7280', fontStyle: 'italic' },
   { tag: tags.string, color: '#059669' },
@@ -87,14 +88,33 @@ const lightHighlight = HighlightStyle.define([
   { tag: tags.operator, color: '#475569' },
   { tag: tags.punctuation, color: '#64748b' },
   { tag: tags.bracket, color: '#64748b' },
-  { tag: tags.heading, color: '#0f172a', fontWeight: '700' },
+  { tag: tags.atom, color: '#7c3aed' },
+  { tag: tags.literal, color: '#059669' },
+  { tag: tags.escape, color: '#dc2626' },
+  { tag: tags.invalid, color: '#dc2626' },
+  { tag: tags.namespace, color: '#2563eb' },
+  // ── Markdown tokens ──
+  // Headings — teal gradient, darkest for H1
+  { tag: tags.heading1, color: '#0f766e', fontWeight: '800', textDecoration: 'underline' },
+  { tag: tags.heading2, color: '#0d9488', fontWeight: '700' },
+  { tag: tags.heading3, color: '#14b8a6', fontWeight: '700' },
+  { tag: tags.heading4, color: '#2dd4bf', fontWeight: '600' },
+  { tag: tags.heading5, color: '#5eead4', fontWeight: '600' },
+  { tag: tags.heading6, color: '#99f6e4', fontWeight: '500' },
   { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: '700' },
+  { tag: tags.strong, fontWeight: '800' },
+  { tag: tags.strikethrough, textDecoration: 'line-through', color: '#94a3b8' },
+  { tag: tags.monospace, color: '#dc2626' },
+  { tag: tags.quote, color: '#78716c', fontStyle: 'italic' },
+  { tag: tags.list, color: '#7c3aed' },
   { tag: tags.link, color: '#2563eb', textDecoration: 'underline' },
+  { tag: tags.url, color: '#2563eb' },
   { tag: tags.contentSeparator, color: '#94a3b8' },
-  { tag: tags.processingInstruction, color: '#9333ea' },
-  { tag: tags.meta, color: '#9333ea' },
-  { tag: tags.url, color: '#2563eb' }
+  { tag: tags.deleted, color: '#dc2626', textDecoration: 'line-through' },
+  { tag: tags.inserted, color: '#16a34a' },
+  { tag: tags.changed, color: '#d97706' },
+  // processingInstruction (markup chars like #, *, `, >, -, []) handled by markupPlugin.ts
+  { tag: tags.meta, color: '#9333ea' }
 ])
 
 export const lightThemeExtension = [
@@ -174,6 +194,7 @@ const darkTheme = EditorView.theme(
 )
 
 const darkHighlight = HighlightStyle.define([
+  // ── Programming tokens ──
   { tag: tags.keyword, color: '#c678dd', fontWeight: '600' },
   { tag: tags.comment, color: '#5c6370', fontStyle: 'italic' },
   { tag: tags.string, color: '#98c379' },
@@ -188,20 +209,35 @@ const darkHighlight = HighlightStyle.define([
   { tag: tags.operator, color: '#abb2bf' },
   { tag: tags.punctuation, color: '#5c6370' },
   { tag: tags.bracket, color: '#5c6370' },
-  { tag: tags.heading, color: '#e06c75', fontWeight: '700' },
+  { tag: tags.atom, color: '#d19a66' },
+  { tag: tags.literal, color: '#98c379' },
+  { tag: tags.escape, color: '#e06c75' },
+  { tag: tags.invalid, color: '#e06c75' },
+  { tag: tags.namespace, color: '#e5c07b' },
+  // ── Markdown tokens ──
+  // Headings — teal gradient, brightest for H1
+  { tag: tags.heading1, color: '#5eead4', fontWeight: '800', textDecoration: 'underline' },
+  { tag: tags.heading2, color: '#2dd4bf', fontWeight: '700' },
+  { tag: tags.heading3, color: '#14b8a6', fontWeight: '700' },
+  { tag: tags.heading4, color: '#0d9488', fontWeight: '600' },
+  { tag: tags.heading5, color: '#0f766e', fontWeight: '600' },
+  { tag: tags.heading6, color: '#115e59', fontWeight: '500' },
   { tag: tags.emphasis, fontStyle: 'italic' },
-  { tag: tags.strong, fontWeight: '700' },
+  { tag: tags.strong, fontWeight: '800' },
+  { tag: tags.strikethrough, textDecoration: 'line-through', color: '#5c6370' },
+  { tag: tags.monospace, color: '#e06c75' },
+  { tag: tags.quote, color: '#98c379', fontStyle: 'italic' },
+  { tag: tags.list, color: '#c678dd' },
   { tag: tags.link, color: '#61afef', textDecoration: 'underline' },
-  { tag: tags.contentSeparator, color: '#5c6370' },
-  { tag: tags.processingInstruction, color: '#c678dd' },
-  { tag: tags.meta, color: '#c678dd' },
   { tag: tags.url, color: '#61afef' },
-  { tag: tags.propertyName, color: '#e06c75' },
-  { tag: tags.attributeName, color: '#d19a66' },
-  { tag: tags.quote, color: '#98c379' },
-  { tag: tags.deleted, color: '#e06c75' },
+  { tag: tags.contentSeparator, color: '#5c6370' },
+  { tag: tags.deleted, color: '#e06c75', textDecoration: 'line-through' },
   { tag: tags.inserted, color: '#98c379' },
-  { tag: tags.changed, color: '#e5c07b' }
+  { tag: tags.changed, color: '#e5c07b' },
+  // processingInstruction (markup chars like #, *, `, >, -, []) handled by markupPlugin.ts
+  { tag: tags.meta, color: '#c678dd' },
+  { tag: tags.propertyName, color: '#e06c75' },
+  { tag: tags.attributeName, color: '#d19a66' }
 ])
 
 export const darkThemeExtension = [

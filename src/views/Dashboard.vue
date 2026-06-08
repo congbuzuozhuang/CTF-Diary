@@ -3,7 +3,7 @@
     <!-- Welcome header -->
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-bold">👋 欢迎回来</h2>
+        <h2 class="text-2xl font-bold">概览</h2>
         <p class="text-[var(--text-secondary)] mt-1 text-sm">
           {{ greeting }}
         </p>
@@ -81,7 +81,7 @@
           :disabled="checkedIn"
           @click="handleCheckin"
         >
-          {{ checkedIn ? '✅ 已打卡' : '📝 打卡' }}
+          {{ checkedIn ? '已打卡' : '打卡' }}
         </button>
       </div>
     </div>
@@ -103,7 +103,9 @@
           @click="$router.push(`/competitions/${comp.id}`)"
         >
           <div class="flex items-center gap-3 min-w-0">
-            <span class="text-lg shrink-0">🏆</span>
+            <svg class="w-5 h-5 shrink-0 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+            </svg>
             <div class="min-w-0">
               <p class="text-sm font-medium truncate">{{ comp.name }}</p>
               <p class="text-xs text-[var(--text-muted)]">
@@ -113,7 +115,7 @@
             </div>
           </div>
           <button class="btn-ghost text-xs shrink-0 ml-2" @click.stop="handleParticipate(comp.id)">
-            📋 参加
+            参加
           </button>
         </div>
       </div>
@@ -211,12 +213,12 @@ const greeting = ref(getGreeting())
 
 function getGreeting(): string {
   const hour = new Date().getHours()
-  if (hour < 6) return '夜深了，注意休息 🌙'
-  if (hour < 12) return '早上好，新的一天开始 ☀️'
-  if (hour < 14) return '中午好，别忘了吃饭 🍜'
-  if (hour < 18) return '下午好，继续加油 💪'
-  if (hour < 22) return '晚上好，学习的好时光 📖'
-  return '夜深了，注意休息 🌙'
+  if (hour < 6) return '夜深了，注意休息'
+  if (hour < 12) return '早上好'
+  if (hour < 14) return '中午好'
+  if (hour < 18) return '下午好'
+  if (hour < 22) return '晚上好'
+  return '夜深了，注意休息'
 }
 
 onMounted(async () => {

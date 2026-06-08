@@ -2,7 +2,7 @@
   <div class="competitions animate-fade-in space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-bold">🏆 比赛管理</h2>
+        <h2 class="text-2xl font-bold">比赛管理</h2>
         <p class="text-[var(--text-secondary)] mt-1 text-sm">管理 CTF 比赛信息，从 CTFtime 获取或手动创建</p>
       </div>
       <div class="flex items-center gap-2">
@@ -172,7 +172,7 @@
               v-if="comp.status === 'participating' && comp.solved"
               class="px-2 py-0.5 rounded text-xs font-medium bg-green-500/15 text-green-400"
             >
-              ✅ 已解决
+              已解决
             </span>
             <!-- Partial progress for participating (not fully solved, has challenges) -->
             <span
@@ -194,7 +194,7 @@
                    hover:bg-blue-500/25 transition-colors"
             @click.stop="handleParticipate(comp)"
           >
-            📋 参加
+            参加
           </button>
         </div>
       </div>

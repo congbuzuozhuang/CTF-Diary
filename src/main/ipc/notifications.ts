@@ -77,7 +77,7 @@ export function checkNotifications(force = false): { notified: number } {
       if (!wasNotified(notifyKey) || force) {
         const sessionKey = `notify_session_soon_${comp.id}`
         if (!wasNotified(sessionKey) || force) {
-          const title = '📅 比赛即将开始'
+          const title = '比赛即将开始'
           const body = daysLeft === 0
             ? `「${comp.name}」今天开始！(${formatDate(comp.start_date)} ~ ${formatDate(comp.end_date)})`
             : `「${comp.name}」将在 ${daysLeft} 天后开始 (${formatDate(comp.start_date)} ~ ${formatDate(comp.end_date)})`

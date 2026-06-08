@@ -2,7 +2,7 @@
   <div class="diary animate-fade-in space-y-6">
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-2xl font-bold">📝 日志打卡</h2>
+        <h2 class="text-2xl font-bold">日志打卡</h2>
         <p class="text-[var(--text-secondary)] mt-1 text-sm">记录每日学习进展，追踪成长轨迹</p>
       </div>
       <button
@@ -10,7 +10,7 @@
         :disabled="store.checkedInToday"
         @click="handleTodayCheckin"
       >
-        {{ store.checkedInToday ? '✅ 已打卡' : '📝 今日打卡' }}
+        {{ store.checkedInToday ? '已打卡' : '今日打卡' }}
       </button>
     </div>
 

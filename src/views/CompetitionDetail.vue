@@ -27,14 +27,14 @@
           class="btn-primary text-sm"
           @click="handleParticipate"
         >
-          📋 参加比赛
+          参加比赛
         </button>
         <span
           v-else-if="competition.status === 'participating'"
           class="px-3 py-1.5 rounded-lg text-sm font-medium"
           :class="competition.solved ? 'bg-green-500/15 text-green-400' : 'bg-purple-500/15 text-purple-400'"
         >
-          {{ competition.solved ? '✅ 已解决' : '📋 已参加' }}
+          {{ competition.solved ? '已解决' : '已参加' }}
         </span>
         <a
           v-if="competition.url"
@@ -92,7 +92,7 @@
       <!-- Challenge progress -->
       <div class="card">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="font-semibold">📊 题目进度</h3>
+          <h3 class="font-semibold">题目进度</h3>
           <div class="flex items-center gap-3">
             <span class="text-sm font-medium" :class="progress.solved === progress.total && progress.total > 0 ? 'text-green-400' : 'text-[var(--text-secondary)]'">
               {{ progress.solved }} / {{ progress.total }} 已解决
@@ -224,14 +224,14 @@
       <div v-if="Object.keys(challengeStore.byCategory).length === 0" class="card text-center py-6">
         <p class="text-sm text-[var(--text-secondary)] mb-3">还没有创建任何题目</p>
         <button class="btn-primary text-sm" @click="openCreateDialog('pwn')">
-          📝 创建第一个题目
+          创建第一个题目
         </button>
       </div>
 
       <!-- File sections -->
       <div>
         <div class="flex items-center gap-2 mb-4">
-          <h3 class="font-semibold text-lg">📁 附件与笔记</h3>
+          <h3 class="font-semibold text-lg">附件与笔记</h3>
           <span class="text-xs text-[var(--text-muted)] font-mono">{{ competition.directory }}</span>
         </div>
 
@@ -341,7 +341,11 @@
 
     <!-- Not participating hint -->
     <div v-else class="card text-center py-8">
-      <div class="text-4xl mb-3">📋</div>
+      <div class="text-4xl mb-3">
+        <svg class="w-8 h-8 mx-auto text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+      </div>
       <p class="text-sm text-[var(--text-secondary)] mb-1">尚未参加此比赛</p>
       <p class="text-xs text-[var(--text-muted)] mb-4">参加后将自动创建 PWN / RE / 笔记 目录结构</p>
       <button

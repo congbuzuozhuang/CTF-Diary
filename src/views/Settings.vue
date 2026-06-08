@@ -1,7 +1,7 @@
 <template>
   <div class="settings animate-fade-in space-y-8">
     <div>
-      <h2 class="text-2xl font-bold">⚙️ 设置</h2>
+      <h2 class="text-2xl font-bold">设置</h2>
       <p class="text-[var(--text-secondary)] mt-1 text-sm">个性化定制你的 CTF Diary</p>
     </div>
 
@@ -91,7 +91,9 @@
             : 'border-[var(--border-color)] hover:border-slate-500'"
           @click="settingsStore.set('theme', 'dark')"
         >
-          <div class="text-2xl mb-1">🌙</div>
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
           <div class="text-sm font-medium">暗色模式</div>
           <div class="text-xs text-[var(--text-muted)] mt-0.5">护眼舒适</div>
         </button>
@@ -102,7 +104,9 @@
             : 'border-[var(--border-color)] hover:border-slate-500'"
           @click="settingsStore.set('theme', 'light')"
         >
-          <div class="text-2xl mb-1">☀️</div>
+          <svg class="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
           <div class="text-sm font-medium">亮色模式</div>
           <div class="text-xs text-[var(--text-muted)] mt-0.5">清晰明亮</div>
         </button>

@@ -5,15 +5,15 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from '@codemirror/view'
-import { EditorState } from '@codemirror/state'
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
+import { EditorState, Prec } from '@codemirror/state'
+import { markdown, markdownLanguage, markdownKeymap } from '@codemirror/lang-markdown'
 import { python } from '@codemirror/lang-python'
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands'
-import { syntaxHighlighting, defaultHighlightStyle } from '@codemirror/language'
-import { closeBrackets, autocompletion } from '@codemirror/autocomplete'
 import { bracketMatching } from '@codemirror/language'
+import { closeBrackets, autocompletion } from '@codemirror/autocomplete'
 import { searchKeymap, highlightSelectionMatches } from '@codemirror/search'
 import { lightThemeExtension, darkThemeExtension } from './cmTheme'
+import { wysiwygPlugin } from './wysiwygPlugin'
 
 const props = defineProps<{
   modelValue: string
@@ -31,20 +31,31 @@ const emit = defineEmits<{
 const editorRef = ref<HTMLElement>()
 let view: EditorView | null = null
 
-onMounted(() => {
-  if (!editorRef.value) return
+function createUpdateListener() {
+  return EditorView.updateListener.of((update) => {
+    if (update.docChanged) {
+      emit('update:modelValue', update.state.doc.toString())
+    }
+    if (update.selectionSet || update.docChanged) {
+      const pos = update.state.selection.main.head
+      const line = update.state.doc.lineAt(pos)
+      emit('cursor', { line: line.number, col: pos - line.from + 1 })
+    }
+  })
+}
 
+function buildExtensions(dark: boolean) {
   const langExtension = props.language === 'python'
     ? python()
     : props.language === 'markdown'
       ? markdown({ base: markdownLanguage, codeLanguages: [] })
       : []
 
-  const themeExtension = props.dark ? darkThemeExtension : lightThemeExtension
+  const themeExtension = dark ? darkThemeExtension : lightThemeExtension
 
-  const extensions = [
+  return [
     langExtension,
-    syntaxHighlighting(defaultHighlightStyle),
+    Prec.highest(wysiwygPlugin),
     history(),
     closeBrackets(),
     autocompletion(),
@@ -54,6 +65,7 @@ onMounted(() => {
     highlightActiveLine(),
     highlightActiveLineGutter(),
     keymap.of([
+      ...markdownKeymap,
       ...defaultKeymap,
       ...historyKeymap,
       ...searchKeymap,
@@ -67,28 +79,25 @@ onMounted(() => {
       }
     ]),
     themeExtension,
-    EditorView.updateListener.of((update) => {
-      if (update.docChanged) {
-        emit('update:modelValue', update.state.doc.toString())
-      }
-      // Emit cursor position
-      if (update.selectionSet || update.docChanged) {
-        const pos = update.state.selection.main.head
-        const line = update.state.doc.lineAt(pos)
-        emit('cursor', { line: line.number, col: pos - line.from + 1 })
-      }
-    }),
+    createUpdateListener(),
     EditorState.readOnly.of(props.readonly || false),
     EditorView.lineWrapping
   ]
+}
 
+function createEditor() {
+  if (!editorRef.value) return
   view = new EditorView({
     state: EditorState.create({
       doc: props.modelValue,
-      extensions
+      extensions: buildExtensions(props.dark ?? false)
     }),
     parent: editorRef.value
   })
+}
+
+onMounted(() => {
+  createEditor()
 })
 
 onBeforeUnmount(() => {
@@ -109,61 +118,11 @@ watch(() => props.modelValue, (newVal) => {
   }
 })
 
-// Rebuild editor when theme changes
+// Rebuild editor when theme changes (preserves document content)
 watch(() => props.dark, () => {
-  if (view) {
-    view.destroy()
-    view = null
-  }
-  // Trigger re-mount through key change on parent
-  if (editorRef.value) {
-    const langExtension = props.language === 'python'
-      ? python()
-      : props.language === 'markdown'
-        ? markdown({ base: markdownLanguage, codeLanguages: [] })
-        : []
-
-    const themeExtension = props.dark ? darkThemeExtension : lightThemeExtension
-
-    view = new EditorView({
-      state: EditorState.create({
-        doc: props.modelValue,
-        extensions: [
-          langExtension,
-          syntaxHighlighting(defaultHighlightStyle),
-          history(),
-          closeBrackets(),
-          autocompletion(),
-          bracketMatching(),
-          highlightSelectionMatches(),
-          lineNumbers(),
-          highlightActiveLine(),
-          highlightActiveLineGutter(),
-          keymap.of([
-            ...defaultKeymap,
-            ...historyKeymap,
-            ...searchKeymap,
-            indentWithTab,
-            { key: 'Ctrl-s', run: () => { emit('save'); return true } }
-          ]),
-          themeExtension,
-          EditorView.updateListener.of((update) => {
-            if (update.docChanged) {
-              emit('update:modelValue', update.state.doc.toString())
-            }
-            if (update.selectionSet || update.docChanged) {
-              const pos = update.state.selection.main.head
-              const line = update.state.doc.lineAt(pos)
-              emit('cursor', { line: line.number, col: pos - line.from + 1 })
-            }
-          }),
-          EditorState.readOnly.of(props.readonly || false),
-          EditorView.lineWrapping
-        ]
-      }),
-      parent: editorRef.value
-    })
-  }
+  if (!view) return
+  view.destroy()
+  createEditor()
 })
 </script>
 

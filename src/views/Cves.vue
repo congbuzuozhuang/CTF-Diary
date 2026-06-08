@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-[var(--text-primary)]">🐛 CVE 复现管理</h1>
+        <h1 class="text-2xl font-bold text-[var(--text-primary)]">CVE 复现管理</h1>
         <p class="text-sm text-[var(--text-muted)] mt-1">追踪和管理 CVE 漏洞复现工作</p>
       </div>
       <div class="flex items-center gap-2">

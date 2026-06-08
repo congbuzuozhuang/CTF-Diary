@@ -92,11 +92,11 @@
     </div>
 
     <!-- ─── Main area ─── -->
-    <div class="flex-1 flex min-h-0 border-t border-[var(--border-color)]">
+    <div class="flex-1 flex min-h-0 border-t panel-glass border-t-0">
       <!-- File tree sidebar -->
       <div
         v-if="showSidebar"
-        class="w-56 shrink-0 border-r border-[var(--border-color)] overflow-auto bg-[var(--bg-secondary)]"
+        class="w-56 shrink-0 panel-glass border-r overflow-auto"
       >
         <div class="p-2">
           <div class="flex items-center gap-2 px-2 py-1.5 mb-1">
@@ -149,7 +149,7 @@
       <!-- Editor panel -->
       <div class="flex-1 flex flex-col min-w-0 min-h-0">
         <!-- Tabs bar -->
-        <div v-if="tabStore.tabs.length > 0" class="flex items-center shrink-0 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] overflow-x-auto">
+        <div v-if="tabStore.tabs.length > 0" class="flex items-center shrink-0 panel-glass border-b overflow-x-auto">
           <div class="flex items-center min-w-0">
             <div
               v-for="tab in tabStore.tabs"
@@ -193,7 +193,7 @@
         <div class="flex-1 flex min-h-0">
           <div v-if="tabStore.activeTab" class="flex-1 min-w-0" :class="{ 'w-1/2': showPreview && tabStore.activeTab.language === 'markdown' }">
             <MdEditor
-              :key="tabStore.activeTab.id + (isDark ? '-dark' : '-light')"
+              :key="tabStore.activeTab.id"
               :model-value="tabStore.activeTab.content"
               :language="tabStore.activeTab.language"
               :dark="isDark"
@@ -206,7 +206,7 @@
           <!-- Empty state -->
           <div
             v-else
-            class="flex-1 flex items-center justify-center bg-[var(--bg-secondary)]"
+            class="flex-1 flex items-center justify-center panel-glass"
           >
             <div class="text-center">
               <svg class="w-12 h-12 mx-auto mb-3 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,7 +226,7 @@
           <!-- Preview panel (markdown) -->
           <div
             v-if="showPreview && tabStore.activeTab?.language === 'markdown'"
-            class="w-1/2 border-l border-[var(--border-color)] overflow-auto bg-[var(--bg-primary)]"
+            class="w-1/2 panel-glass border-l overflow-auto"
           >
             <MdPreview :content="tabStore.activeTab.content" />
           </div>
@@ -234,7 +234,7 @@
           <!-- Output panel (python) -->
           <div
             v-if="showOutput && tabStore.activeTab?.language === 'python'"
-            class="w-1/2 border-l border-[var(--border-color)] flex flex-col"
+            class="w-1/2 panel-glass border-l flex flex-col"
           >
             <div class="flex items-center justify-between px-3 py-2 border-b border-[var(--border-color)] shrink-0">
               <span class="text-xs font-semibold text-[var(--text-secondary)]">执行输出</span>
@@ -256,7 +256,7 @@
         <!-- Status bar -->
         <div
           v-if="tabStore.activeTab"
-          class="flex items-center justify-between shrink-0 h-7 px-3 bg-[var(--bg-secondary)] border-t border-[var(--border-color)] text-[11px] text-[var(--text-muted)]"
+          class="flex items-center justify-between shrink-0 h-7 px-3 panel-glass border-t text-[11px] text-[var(--text-muted)]"
         >
           <div class="flex items-center gap-3">
             <span class="flex items-center gap-1">

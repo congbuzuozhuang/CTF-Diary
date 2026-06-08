@@ -86,11 +86,11 @@
       <!-- Inline Editor: Notes -->
       <div class="card mb-6">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-medium text-[var(--text-secondary)]">📝 笔记 (notes.md)</h3>
+          <h3 class="text-sm font-medium text-[var(--text-secondary)]">笔记 (notes.md)</h3>
           <span v-if="notesDirty" class="text-xs text-blue-400">● 未保存</span>
           <span v-else class="text-xs text-green-400">✓ 已保存</span>
         </div>
-        <div class="border border-[var(--border-color)] rounded-lg overflow-hidden" style="height: 320px">
+        <div class="editor-frame" style="height: 320px">
           <MdEditor
             v-model="notesContent"
             :language="'markdown'"
@@ -115,7 +115,7 @@
           <span v-if="writeupDirty" class="text-xs text-blue-400">● 未保存</span>
           <span v-else class="text-xs text-green-400">✓ 已保存</span>
         </div>
-        <div class="border border-[var(--border-color)] rounded-lg overflow-hidden" style="height: 400px">
+        <div class="editor-frame" style="height: 400px">
           <MdEditor
             v-model="writeupContent"
             :language="'markdown'"
@@ -139,7 +139,7 @@
       <!-- File Tree -->
       <div class="w-56 shrink-0 card overflow-y-auto">
         <div class="flex items-center justify-between mb-2">
-          <span class="text-xs font-medium text-[var(--text-secondary)]">📁 文件</span>
+          <span class="text-xs font-medium text-[var(--text-secondary)]">文件</span>
           <button
             class="text-xs text-blue-400 hover:underline"
             title="导入文件"
@@ -175,7 +175,7 @@
           </div>
 
           <!-- Edit Mode -->
-          <div v-if="editMode && isTextFile" class="flex-1 min-h-0 border border-[var(--border-color)] rounded-lg overflow-hidden">
+          <div v-if="editMode && isTextFile" class="flex-1 min-h-0 editor-frame">
             <MdEditor
               v-model="currentFileContent"
               :language="detectLanguage(selectedFilePath)"

@@ -3,7 +3,7 @@
     <!-- Top bar -->
     <div class="flex items-center justify-between shrink-0">
       <div>
-        <h2 class="text-2xl font-bold">📁 文件管理</h2>
+        <h2 class="text-2xl font-bold">文件管理</h2>
         <p class="text-[var(--text-secondary)] mt-1 text-sm">
           共 {{ fileStore.fileGroups.length }} 场比赛 · {{ totalFileCount }} 个文件
         </p>
@@ -176,7 +176,7 @@
           <!-- Content -->
           <div class="flex-1 overflow-auto min-h-0">
             <!-- Edit mode -->
-            <div v-if="editMode && isTextFile" class="h-full border border-[var(--border-color)] rounded-lg overflow-hidden">
+            <div v-if="editMode && isTextFile" class="h-full editor-frame">
               <MdEditor
                 v-model="editableContent"
                 :language="detectLanguage(fileStore.selectedFile.name)"

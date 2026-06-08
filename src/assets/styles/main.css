@@ -11,7 +11,7 @@
     --bg-tertiary: #e2e8f0;
     --text-primary: #0f172a;
     --text-secondary: #475569;
-    --text-muted: #94a3b8;
+    --text-muted: #475569;
     --border-color: #e2e8f0;
     --border-hover: #cbd5e1;
     --accent: #3b82f6;
@@ -62,7 +62,7 @@
   }
 
   body {
-    font-family: 'Inter', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
     background-color: var(--bg-primary);
     color: var(--text-primary);
     overflow: hidden;
@@ -147,4 +147,34 @@
   .input::placeholder {
     color: var(--text-muted);
   }
+
+  .editor-frame {
+    border: 1px solid rgba(226, 232, 240, 0.25);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  :root.dark .editor-frame {
+    border-color: rgba(51, 65, 85, 0.25);
+  }
+
+  .panel-glass {
+    background: rgba(var(--card-bg-rgb), 0.25);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-color: rgba(226, 232, 240, 0.25);
+  }
+  :root.dark .panel-glass {
+    border-color: rgba(51, 65, 85, 0.25);
+  }
+
+  /* Shared status badge classes */
+  .badge-blue   { @apply bg-blue-500/15 text-blue-400; }
+  .badge-green  { @apply bg-green-500/15 text-green-400; }
+  .badge-yellow { @apply bg-yellow-500/15 text-yellow-400; }
+  .badge-red    { @apply bg-red-500/15 text-red-400; }
+  .badge-purple { @apply bg-purple-500/15 text-purple-400; }
+  .badge-gray   { @apply bg-gray-500/15 text-gray-400; }
+
+  /* Page container — unified spacing */
+  .page-container { @apply p-6 space-y-6; }
 }
