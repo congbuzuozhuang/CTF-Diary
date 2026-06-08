@@ -1,6 +1,6 @@
 {
   "name": "ctf-diary",
-  "version": "1.0.0",
+  "version": "1.5.0",
   "description": "CTF Diary — 桌面端 CTF 选手日常工具",
   "main": "out/main/index.js",
   "scripts": {

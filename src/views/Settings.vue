@@ -384,7 +384,7 @@
     <!-- About -->
     <section class="card">
       <div class="text-center text-xs text-[var(--text-muted)] space-y-1">
-        <p>CTF Diary v1.0.0</p>
+        <p>CTF Diary v1.5.0</p>
         <p>Built with Electron + Vue 3 + Tailwind CSS</p>
       </div>
     </section>

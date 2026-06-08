@@ -4,7 +4,7 @@ import { syntaxTree } from '@codemirror/language'
 import { RangeSetBuilder } from '@codemirror/state'
 
 /**
- * Typora-style WYSIWYG — v6: Single-pass, line-ordered
+ * Typora-style WYSIWYG — Single-pass, line-ordered
  *
  * Key fix: ALL decorations must be added to RangeSetBuilder in strict
  * ascending `from` order. Single loop over lines guarantees this.
