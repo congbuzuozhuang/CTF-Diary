@@ -5,8 +5,20 @@ import { fetchCtftimeEvents } from '../services/ctftime'
 
 export function registerCompetitionHandlers(): void {
   // Get all competitions from local DB
+  // Auto-refresh status: upcoming/running → finished if end_date passed
   ipcMain.handle('competitions:getList', () => {
     const db = getDatabase()
+
+    // Re-evaluate status based on current time (don't touch 'participating')
+    db.prepare(`
+      UPDATE competitions SET status = CASE
+        WHEN end_date < datetime('now', 'localtime') THEN 'finished'
+        WHEN start_date <= datetime('now', 'localtime') AND end_date >= datetime('now', 'localtime') THEN 'running'
+        ELSE 'upcoming'
+      END
+      WHERE status IN ('upcoming', 'running')
+    `).run()
+
     return db.prepare('SELECT * FROM competitions ORDER BY start_date DESC').all()
   })
 
@@ -14,8 +26,17 @@ export function registerCompetitionHandlers(): void {
   ipcMain.handle('competitions:getFromCtftime', async () => {
     const db = getDatabase()
 
+    console.log('[CTF Diary] Fetching events from CTFtime...')
+
     // Fetch from CTFtime API
-    const events = await fetchCtftimeEvents(100)
+    let events: Awaited<ReturnType<typeof fetchCtftimeEvents>>
+    try {
+      events = await fetchCtftimeEvents(100)
+      console.log(`[CTF Diary] Fetched ${events.length} events from CTFtime`)
+    } catch (err) {
+      console.error('[CTF Diary] Failed to fetch from CTFtime:', err)
+      throw new Error(`获取 CTFtime 比赛失败: ${err instanceof Error ? err.message : String(err)}`)
+    }
 
     // Upsert each event into local DB
     const upsert = db.prepare(`

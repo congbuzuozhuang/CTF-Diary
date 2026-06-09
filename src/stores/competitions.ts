@@ -86,6 +86,16 @@ export const useCompetitionsStore = defineStore('competitions', () => {
     }
   }
 
+  async function deleteComp(id: number) {
+    try {
+      await window.api.data.clearCompetition(id)
+      competitions.value = competitions.value.filter(c => c.id !== id)
+    } catch (err) {
+      console.error('Failed to delete competition:', err)
+      throw err
+    }
+  }
+
   function getById(id: number): Competition | undefined {
     return competitions.value.find(c => c.id === id)
   }
@@ -101,6 +111,7 @@ export const useCompetitionsStore = defineStore('competitions', () => {
     fetchFromCtftime,
     participate,
     create,
+    deleteComp,
     getById
   }
 })

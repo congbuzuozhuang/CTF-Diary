@@ -186,15 +186,24 @@
 
         <!-- Action bar -->
         <div
-          v-if="comp.status !== 'participating' && comp.status !== 'finished'"
+          v-if="comp.status !== 'participating'"
           class="mt-3 pt-3 border-t border-[var(--border-color)] flex items-center justify-end gap-2"
         >
           <button
+            v-if="comp.status !== 'finished'"
             class="px-3 py-1.5 rounded-md text-xs font-medium bg-blue-500/15 text-blue-400
                    hover:bg-blue-500/25 transition-colors"
             @click.stop="handleParticipate(comp)"
           >
             参加
+          </button>
+          <button
+            v-if="comp.status === 'finished'"
+            class="px-3 py-1.5 rounded-md text-xs font-medium bg-red-500/15 text-red-400
+                   hover:bg-red-500/25 transition-colors"
+            @click.stop="confirmDelete(comp)"
+          >
+            删除
           </button>
         </div>
       </div>
@@ -368,6 +377,47 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Delete Confirmation Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showDeleteModal"
+        class="fixed inset-0 z-50 flex items-center justify-center"
+        @click.self="showDeleteModal = false"
+      >
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div class="relative w-full max-w-sm mx-4 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-xl shadow-2xl animate-fade-in p-6">
+          <h3 class="text-lg font-semibold mb-2">确认删除</h3>
+          <p class="text-sm text-[var(--text-secondary)] mb-4">
+            确定要删除「{{ deleteTarget?.name }}」吗？此操作不可撤销，比赛目录和文件也会一并删除。
+          </p>
+          <div class="flex items-center justify-end gap-3">
+            <button
+              class="px-4 py-2 rounded-lg text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+              @click="showDeleteModal = false"
+              :disabled="deleting"
+            >
+              取消
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white
+                     hover:bg-red-600 transition-colors disabled:opacity-50"
+              :disabled="deleting"
+              @click="handleDelete"
+            >
+              <span v-if="deleting" class="flex items-center gap-2">
+                <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                删除中...
+              </span>
+              <span v-else>确认删除</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -388,6 +438,9 @@ const challengeProgress = ref<Record<number, { total: number; solved: number }>>
 const showCreateModal = ref(false)
 const creating = ref(false)
 const nameInput = ref<HTMLInputElement | null>(null)
+const showDeleteModal = ref(false)
+const deleting = ref(false)
+const deleteTarget = ref<Competition | null>(null)
 
 // ── Date presets ──
 interface DatePreset {
@@ -588,6 +641,25 @@ async function handleFetchCtftime() {
 
 async function handleParticipate(comp: Competition) {
   await store.participate(comp.id)
+}
+
+function confirmDelete(comp: Competition) {
+  deleteTarget.value = comp
+  showDeleteModal.value = true
+}
+
+async function handleDelete() {
+  if (!deleteTarget.value || deleting.value) return
+  deleting.value = true
+  try {
+    await store.deleteComp(deleteTarget.value.id)
+    showDeleteModal.value = false
+    deleteTarget.value = null
+  } catch (err) {
+    console.error('Failed to delete competition:', err)
+  } finally {
+    deleting.value = false
+  }
 }
 
 function formatBadgeClass(format: string): string {

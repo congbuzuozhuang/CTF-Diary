@@ -10,8 +10,19 @@
       </h1>
     </div>
 
-    <!-- Right: Checkin status + Window controls -->
+    <!-- Right: Search + Checkin status + Window controls -->
     <div class="flex items-center gap-1 no-drag">
+      <!-- Search button -->
+      <button
+        class="w-8 h-8 flex items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-colors"
+        title="搜索 (Ctrl+Shift+F)"
+        @click="toggleSearch()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+      </button>
+
       <!-- Today's checkin status -->
       <div class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] text-xs mr-2">
         <span class="w-2 h-2 rounded-full" :class="checkedIn ? 'bg-green-500' : 'bg-slate-400'"></span>
@@ -60,6 +71,7 @@ import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const collapsed = inject<Ref<boolean>>('sidebarCollapsed', ref(false))
+const toggleSearch = inject<() => void>('toggleSearch', () => {})
 const checkedIn = ref(false)
 const isMax = ref(false)
 

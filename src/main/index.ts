@@ -14,6 +14,7 @@ import { registerNotificationHandlers, checkNotifications } from './ipc/notifica
 import { registerCvesHandlers } from './ipc/cves'
 import { registerDockerHandlers } from './ipc/docker'
 import { registerBackupHandlers } from './ipc/backup'
+import { registerSearchHandlers } from './ipc/search'
 
 const isDev = !app.isPackaged
 
@@ -70,6 +71,7 @@ function registerAllHandlers(): void {
   registerCvesHandlers()
   registerDockerHandlers()
   registerBackupHandlers()
+  registerSearchHandlers()
 }
 
 app.whenReady().then(() => {

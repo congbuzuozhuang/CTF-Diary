@@ -26,11 +26,17 @@ export function fetchCtftimeEvents(limit: number = 100): Promise<CtftimeEventRaw
   return new Promise((resolve, reject) => {
     const url = `${CTFTIME_API}?limit=${limit}`
 
-    get(url, (res: IncomingMessage) => {
+    get(url, {
+      headers: {
+        'User-Agent': 'CTF-Diary/1.5'
+      }
+    }, (res: IncomingMessage) => {
       // Follow redirect if needed
       if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         const redirectUrl = new URL(res.headers.location, CTFTIME_API).href
-        get(redirectUrl, (redirectRes: IncomingMessage) => {
+        get(redirectUrl, {
+          headers: { 'User-Agent': 'CTF-Diary/1.5' }
+        }, (redirectRes: IncomingMessage) => {
           consumeResponse(redirectRes, resolve, reject)
         }).on('error', reject)
         return

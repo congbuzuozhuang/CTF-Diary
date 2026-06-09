@@ -143,6 +143,11 @@ const api = {
   backup: {
     export_: () => ipcRenderer.invoke('backup:export'),
     import_: () => ipcRenderer.invoke('backup:import')
+  },
+
+  // Search
+  search: {
+    query: (term: string) => ipcRenderer.invoke('search:query', term)
   }
 }
 
